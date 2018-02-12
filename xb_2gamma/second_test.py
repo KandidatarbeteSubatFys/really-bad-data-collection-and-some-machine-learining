@@ -25,6 +25,38 @@ def percent_error(x, y):
     return tf.sqrt(tf.divide(tf.minimum(tf.reduce_sum(tf.square(x-y), 1), tf.reduce_sum(tf.square(tf.reverse(x, [-1])-y), 1)), tf.reduce_sum(tf.square(y), 1)))
 
 
+def hidden_laysers(input, dim, nr, relu=True, dtype=tf.float32):
+    W = tf.Variable(tf.truncated_normal([dim, dim], stddev=0.1), dtype=dtype)
+    b = tf.Variable(tf.zeros([dim]), dtype=dtype)
+    if nr == 0 or nr < 0:
+        raise ValueError('Number of laysers most be a posetive integer /Pontus')
+    elif nr == 1:
+        if relu:
+            return tf.nn.relu(tf.matmul(input, W) + b)
+        else:
+            return tf.matmul(input, W) + b
+    else:
+        if relu:
+            return tf.nn.relu(tf.matmul(hidden_laysers(input, dim, nr-1, relu=relu, dtype=dtype), W) + b )
+        else:
+            return tf.matmul(hidden_laysers(input, dim, nr-1, relu=relu, dtype=dtype), W) + b
+
+
+def def_fc_layers(input, start_nodes, end_nodes, hidden_nodes, nr_hidden_laysers, relu=True, dtyp=tf.float32):
+    W_start = tf.Variable(tf.truncated_normal([start_nodes, hidden_nodes], stddev=0.1), dtype=tf.float32)
+    b_start = tf.Variable(tf.zeros([hidden_nodes]))
+    W_end = tf.Variable(tf.truncated_normal([hidden_nodes, end_nodes], stddev=0.1), dtype=tf.float32)
+    b_end = tf.Variable(tf.zeros([hidden_nodes]))
+    if relu:
+        temp = tf.nn.relu(tf.matmul(input, W_start) + b_start)
+        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers, relu=relu, dtype=dtyp)
+        return tf.nn.relu(tf.matmul(temp2, W_end) + b_end)
+    else:
+        temp = tf.matmul(input, W_start) + b_start
+        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers, relu=relu, dtype=dtyp)
+        return tf.matmul(temp2, W_end) + b_end
+
+
 def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden):
     print('Initializing variables')
     x = tf.placeholder(dtype=tf.float32, shape=[None, 162])
