@@ -25,12 +25,12 @@ def percent_error(x, y):
     return tf.sqrt(tf.divide(tf.minimum(tf.reduce_sum(tf.square(x-y), 1), tf.reduce_sum(tf.square(tf.reverse(x, [-1])-y), 1)), tf.reduce_sum(tf.square(y), 1)))
 
 
-def main(file_name_x, file_name_y, dep_file_name):
+def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden):
     print('Initializing variables')
     x = tf.placeholder(dtype=tf.float32, shape=[None, 162])
     y_ = tf.placeholder(dtype=tf.float32, shape=[None, 2])
 
-    a = 4096
+    a = nr_nodes_hidden
     W1 = tf.Variable(tf.truncated_normal([162, a], stddev=0.1), dtype=tf.float32)
     b1 = tf.Variable(tf.zeros([a]))
     W2 = tf.Variable(tf.truncated_normal([a, a], stddev=0.1), dtype=tf.float32)
@@ -119,4 +119,4 @@ def main(file_name_x, file_name_y, dep_file_name):
 
 
 if __name__ == '__main__':
-    main('xb_data_2gamma_isotropic_0.1-10_100000.txt', 'gunTVals_0.1-10.txt', 'sum_of_dep_energies.txt')
+    main('xb_data_2gamma_isotropic_0.1-10_100000.txt', 'gunTVals_0.1-10.txt', 'sum_of_dep_energies.txt', 4096)
