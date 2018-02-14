@@ -26,7 +26,7 @@ def moving_average(list, points):
     if len(list) < points:
         return m.fsum(list)/len(list)
     else:
-        return m.fsum(list[-1-points:-1])/len(list[-1-points:-1])
+        return (m.fsum(list[-points:-1]) + list[-1])/points
 
 
 def percent_error(x, y):
@@ -97,11 +97,12 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     start = t.time()
     i = 0
     diff = 10
-    while m.fabs(diff) > 0.1 and i < 100000:
+    tol = 0.000001
+    while m.fabs(diff) > tol and i < 150000:
         x_batch_sub, y_batch_sub = gen_sub_set(100, x_batch_train, y_batch_train)
         if i % 100 == 0:
             loss_list_train.append(sess.run(loss, feed_dict={x: x_batch_sub, y_: y_batch_sub}))
-            x_batch_eval_sub, y_batch_eval_sub = gen_sub_set(100, x_batch_eval, y_batch_eval)
+            x_batch_eval_sub, y_batch_eval_sub = gen_sub_set(300, x_batch_eval, y_batch_eval)
             loss_value = sess.run(loss, feed_dict={x: x_batch_eval_sub, y_: y_batch_eval_sub})
             if i % 10000 == 0:
                 print('Iteration nr. ', i, 'Loss: ', loss_value)
@@ -131,7 +132,7 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
         else:
             out_corr1.append(y_batch_eval[i][1])
             out_corr2.append(y_batch_eval[i][0])
-    dep = [i[0] for i in read_data(dep_file_name)[0:int(0.2*len(x_batch))]]
+    dep = [y_batch_eval[i][0] + y_batch_eval[i][1] for i in range(len(y_batch_eval))]
     sum_out = sess.run(sum, feed_dict={x: x_batch_eval})
 
     out = out1 + out2
@@ -140,44 +141,48 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     mean = np.mean(err_end)
     std = np.std(err_end)
 
-    return loss_end, mean, std, err_end, out, out_corr, loss_list, loss_list_train, Traningtime, Training_iterations, dep, sum_out
+    return loss_end, mean, std, err_end, out, out_corr, loss_list, loss_list_train, Traningtime, Training_iterations, dep, sum_out, tol
 
 
 
 
 def parameter_sweep():
-    hidden_nodes = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
-    hidden_layers = [1, 2, 3, 4, 5, 6]
+    hidden_nodes = [32, 64, 128, 256, 512, 1024, 2048, 4096]
+    hidden_layers = [1, 2, 3, 4, 5]
     n = 0
 
-    with open('stats.txt', 'w') as f1:
-        with open('loss.txt', 'w') as f2:
-            with open('loss_train.txt', 'w') as f3:
-                with open('err.txt', 'w') as f4:
+    with open('./test2(tol=0.000001)/stats.txt', 'w') as f1:
+        with open('./test2(tol=0.000001)/loss.txt', 'w') as f2:
+            with open('./test2(tol=0.000001)/loss_train.txt', 'w') as f3:
+                with open('./test2(tol=0.000001)/err.txt', 'w') as f4:
                     for laysers in hidden_layers:
                         for nodes in hidden_nodes:
-                            loss, mean, std, err, out, out_corr, loss_list, loss_training_list, trainingtime, iterations, dep, sum_out = \
+                            print('Laysers: ' + str(laysers) + ' nodes: ' + str(nodes))
+                            loss, mean, std, err, out, out_corr, loss_list, loss_training_list, trainingtime, iterations, dep, sum_out, tol = \
                                 main('xb_data_2gamma_isotropic_0.1-10_100000.txt', 'gunTVals_0.1-10.txt', 'sum_of_dep_energies.txt', nodes, laysers)
                             print('Ploting')
-                            fig, ax = plt.subplots(2, 2)
-                            ax[0, 0].plot(loss_list)
-                            ax[0, 0].plot(loss_training_list)
-                            ax[0, 0].setlabel(xlabel='Loss function (MeV)^2', ylabel='Iteration x100')
+                            fig, ax = plt.subplots(2, 2, figsize=(20, 10))
+                            iter_list = [i for i in range(0, iterations, 100)]
+                            ax[0, 0].plot(iter_list[39:-1], loss_list[39:-1])
+                            ax[0, 0].plot(iter_list[39:-1], loss_training_list[39:-1])
+                            ax[0, 0].set(ylabel='Loss function (MeV)^2', xlabel='Iteration')
                             ax[0, 1].hist(err, bins='auto')
-                            ax[0, 1].setlabel(xlabel='Counts', ylabel='Relative error')
-                            ax[1, 0].scatter(out_corr, out, s=0.1)
-                            ax[1, 0].plot([0, 10], [0, 10])
-                            ax[1, 0].setlabel(xlabel='Gun energy (MeV)', ylabel='Predicted energy (MeV)')
-                            ax[1, 1].plot([0, 10], [0, 10])
-                            ax[1, 1].setlabel(xlabel='Deposited energy (MeV)', ylabel='Predicted tot energy (MeV)')
+                            ax[0, 1].set(ylabel='Counts', xlabel='Relative error')
+                            ax[1, 0].scatter(out_corr, out, s=0.05)
+                            ax[1, 0].plot([0, 10], [0, 10], 'r')
+                            ax[1, 0].set(xlabel='Gun energy (MeV)', ylabel='Predicted energy (MeV)')
+                            ax[1, 1].scatter(dep, sum_out, s=0.05)
+                            ax[1, 1].plot([0, 20], [0, 20], 'r')
+                            ax[1, 1].set(xlabel='Total gun energy (MeV)', ylabel='Predicted tot energy (MeV)')
+                            fig.suptitle('Hidden layers: ' + str(laysers) + ', nodes per layer: ' + str(nodes) + ' iterations: ' + str(iterations))
                             n = n +1
                             name = str(n) + '.' + str(laysers) + '.' + str(nodes) + '.png'
-                            plt.savefig(name)
+                            plt.savefig('./test2(tol=0.000001)/' + name)
                             plt.clf()
-                            f1.write(str(n) + ' ' + str(laysers) + ' ' + str(nodes) + ' ' + str(loss) + ' ' + str(mean) + ' ' + str(std) + ' \n')
-                            loss_str = ''
-                            loss_train_str = ''
-                            for i in range(len(loss)):
+                            f1.write(str(n) + ' ' + str(laysers) + ' ' + str(nodes) + ' ' + str(loss) + ' ' + str(mean) + ' ' + str(std) + ' ' + str(trainingtime) + ' ' + str(iterations) + ' ' + str(tol) + ' \n')
+                            loss_str = str()
+                            loss_train_str = str()
+                            for i in range(len(loss_list)):
                                 loss_str = loss_str + ' ' + str(loss_list[i])
                                 loss_train_str = loss_train_str + ' ' + str(loss_training_list[i])
                             f2.write(loss_str + ' \n')
