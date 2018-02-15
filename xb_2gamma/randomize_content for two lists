@@ -1,0 +1,13 @@
+from random import shuffle
+
+def randomize_content(x_batch, y_batch):
+    ind_list = [i for i in range(len(x_batch))]
+    shuffle(ind_list)
+    train_new=[]
+    target_new=[]
+    train_new.extend(x_batch)
+    target_new.extend(y_batch)
+
+    for i in range(len(ind_list)):
+         x_batch[i]=train_new[ind_list[i]]
+         y_batch[i]=target_new[ind_list[i]]
