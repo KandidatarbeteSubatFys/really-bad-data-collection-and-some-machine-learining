@@ -36,6 +36,25 @@ def randomize_content(x_batch, y_batch):
     return new_x_batch, new_y_batch
 
 
+def append_files(file_name_x, file_name_y, fill_out_to=None)  # return training_batch and eval_batch
+    if not len(file_name_x) == len(file_name_y):
+        raise TypeError('File x and y most be of same size /Miriam this time')
+    x_batch=[]
+    y_batch=[]
+    for file in file_name_x:
+        x_batch = x_batch+read_data(file, fill_out_to)
+    for file in file_name_y:
+        y_batch=y_batch+read_data(file,fill_out_to)
+        
+    x_batch, y_batch=randomize_content(x_batch,y_batch)
+    x_batch_eval = x_batch[0:int(0.2 * len(x_batch))]
+    x_batch_train = x_batch[int(0.2 * len(x_batch)):-1]
+    y_batch_eval = y_batch[0:int(0.2 * len(x_batch))]  # borde det inte stå ybatch här?
+    y_batch_train = y_batch[int(0.2 * len(x_batch)):-1]
+
+    return x_batch_train, x_batch_eval, y_batch_train, y_batch_eval
+
+
 def gen_sub_set(batch_size, batch_x, batch_y):
     if not len(batch_x) == len(batch_y):
         raise ValueError('Lists most be of same length /Pontus')
@@ -132,12 +151,15 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     move_av = [0]
 
     print('Reading data')
+    #if len(file_name_x)==1 and len(file_name_y)==1
     x_batch = read_data(file_name_x)
     x_batch_eval = x_batch[0:int(0.2*len(x_batch))]
     x_batch_train = x_batch[int(0.2*len(x_batch)):-1]
     y_batch = read_data(file_name_y)
     y_batch_eval = y_batch[0:int(0.2 * len(x_batch))]
     y_batch_train = y_batch[int(0.2 * len(x_batch)):-1]
+    #else x_batch_train, x_batch_eval, y_batch_train, y_batch_eval = append_files(file_name_x, file_name_y)
+    
 
     print('Start training')
     start = t.time()
