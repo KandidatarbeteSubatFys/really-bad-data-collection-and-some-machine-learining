@@ -36,7 +36,7 @@ def randomize_content(x_batch, y_batch):
     return new_x_batch, new_y_batch
 
 
-def append_files(file_name_x, file_name_y, fill_out_to=None)  # return training_batch and eval_batch
+def append_files(file_name_x, file_name_y, fill_out_to=None):  # return training_batch and eval_batch
     if not len(file_name_x) == len(file_name_y):
         raise TypeError('File x and y most be of same size /Miriam this time')
     x_batch=[]
@@ -156,7 +156,7 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     x_batch_eval = x_batch[0:int(0.2*len(x_batch))]
     x_batch_train = x_batch[int(0.2*len(x_batch)):-1]
     y_batch = read_data(file_name_y)
-    y_batch_eval = y_batch[0:int(0.2 * len(x_batch))]
+    y_batch_eval = y_batch[0:int(0.2 * len(x_batch))] #borde det inte stå ybatch här?
     y_batch_train = y_batch[int(0.2 * len(x_batch)):-1]
     #else x_batch_train, x_batch_eval, y_batch_train, y_batch_eval = append_files(file_name_x, file_name_y)
     
