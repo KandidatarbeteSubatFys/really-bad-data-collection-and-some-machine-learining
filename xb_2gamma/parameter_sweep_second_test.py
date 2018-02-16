@@ -3,16 +3,37 @@ import numpy as np
 import time as t
 import matplotlib.pyplot as plt
 import math as m
+from random import shuffle
 
 
-def read_data(file):
+def read_data(file, fill_out_to=None):
     out = []
     with open(file, 'r') as f:
         lines = f.readlines()
-        for line in lines:
-           temp = line.split(' ')
-           out.append([float(s) for s in temp[0:-1]])
+        if isinstance(fill_out_to, int):
+            diff = (fill_out_to - len(out[0])) * [0]
+            for line in lines:
+                temp = line.split(' ') + diff
+                out.append([float(s) for s in temp[0:-1]])
+        else:
+            for line in lines: #Some duplication of code but in the intrest of speed.
+                temp = line.split(' ')
+                out.append([float(s) for s in temp[0:-1]])
     return out
+
+
+def randomize_content(x_batch, y_batch):
+    if not len(x_batch) == len(y_batch):
+        raise TypeError('Batch x and y most be of same size /Pontus')
+    index_list = [i for i in range(len(x_batch))]
+    shuffle(index_list)
+    new_x_batch = []
+    new_y_batch = []
+    for i in index_list:
+        new_x_batch.append(x_batch[i])
+        new_y_batch.append(y_batch[i])
+
+    return new_x_batch, new_y_batch
 
 
 def gen_sub_set(batch_size, batch_x, batch_y):
@@ -36,8 +57,10 @@ def percent_error(x, y):
 def hidden_laysers(input, dim, nr, relu=True, dtype=tf.float32):
     W = tf.Variable(tf.truncated_normal([dim, dim], stddev=0.1), dtype=dtype)
     b = tf.Variable(tf.zeros([dim]), dtype=dtype)
-    if nr == 0 or nr < 0:
+    if  nr < 0:
         raise ValueError('Number of laysers most be a posetive integer /Pontus')
+    elif nr == 0:
+        return input
     elif nr == 1:
         if relu:
             return tf.nn.relu(tf.matmul(input, W) + b)
@@ -57,12 +80,35 @@ def def_fc_layers(input, start_nodes, end_nodes, hidden_nodes, nr_hidden_laysers
     b_end = tf.Variable(tf.zeros([end_nodes]))
     if relu:
         temp = tf.nn.relu(tf.matmul(input, W_start) + b_start)
-        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers, relu=relu, dtype=dtyp)
+        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers-1, relu=relu, dtype=dtyp)
         return tf.matmul(temp2, W_end) + b_end
     else:
         temp = tf.matmul(input, W_start) + b_start
-        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers, relu=relu, dtype=dtyp)
+        temp2 = hidden_laysers(temp, hidden_nodes, nr_hidden_laysers-1, relu=relu, dtype=dtyp)
         return tf.matmul(temp2, W_end) + b_end
+
+
+def def_loss(y, y_, name_of_loss):
+    """"A way to store old loss functions and in the same time still have them accesible, just call this function with
+    the input y to the loss, the 'correct' result and the name of the loss function you want to use"""
+    if name_of_loss == 'kombinations_two':
+        return tf.reduce_mean(tf.minimum(tf.reduce_sum(tf.square(y-y_), 1), tf.reduce_sum(tf.square(tf.reverse(y, [-1])-y_), 1)))
+    else:
+        raise ValueError('The name of the loss function is not recognised')
+
+
+def def_arcitecture(x, name_of_arcitecture, input_size=None, output_size=None, hidden_layers=None, hidden_nodes=None):
+    """"A way to store old arcitectures in the code, just call the function with input and name"""
+    if name_of_arcitecture == 'same_size_hidden layers':
+        if hidden_layers == None or hidden_nodes == None or input_size == None or output_size == None:
+            raise ValueError('Not all input parameters is defined /Pontus')
+        return def_fc_layers(x, input_size, output_size, hidden_nodes, hidden_laysers)
+    else:
+        raise ValueError('Name of arcitecture id not recognized')
+
+
+def get_nr_parameters():
+    return np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])
 
 
 def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_laysers):
