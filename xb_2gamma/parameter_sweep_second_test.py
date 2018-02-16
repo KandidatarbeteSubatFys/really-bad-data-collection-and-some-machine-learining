@@ -143,7 +143,8 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     start = t.time()
     i = 0
     diff = 10
-    while m.fabs(diff) > 0.1 and i < get_nr_parameters()/10:
+    tol = 0.00001
+    while m.fabs(diff) > tol and i < get_nr_parameters()/10:
         x_batch_sub, y_batch_sub = gen_sub_set(100, x_batch_train, y_batch_train)
         if i % 100 == 0:
             loss_list_train.append(sess.run(loss, feed_dict={x: x_batch_sub, y_: y_batch_sub}))
