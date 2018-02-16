@@ -13,8 +13,8 @@ def read_data(file, fill_out_to=None):
         if isinstance(fill_out_to, int):
             diff = (fill_out_to - len(out[0])) * [0]
             for line in lines:
-                temp = line.split(' ') + diff
-                out.append([float(s) for s in temp[0:-1]])
+                temp = line.split(' ')
+                out.append([float(s) for s in temp[0:-1]] + diff)
         else:
             for line in lines: #Some duplication of code but in the intrest of speed.
                 temp = line.split(' ')
@@ -104,7 +104,7 @@ def def_arcitecture(x, name_of_arcitecture, input_size=None, output_size=None, h
             raise ValueError('Not all input parameters is defined /Pontus')
         return def_fc_layers(x, input_size, output_size, hidden_nodes, hidden_laysers)
     else:
-        raise ValueError('Name of arcitecture id not recognized')
+        raise ValueError('Name of arcitecture is not recognized')
 
 
 def get_nr_parameters():
@@ -118,7 +118,7 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
 
     y = def_fc_layers(x, 162, 2, nr_nodes_hidden, nr_hidden_laysers)
 
-    loss = tf.reduce_mean(tf.minimum(tf.reduce_sum(tf.square(y-y_), 1), tf.reduce_sum(tf.square(tf.reverse(y, [-1])-y_), 1)))
+    loss = tf.reduce_mean(tf.minimum(tf.reduce_sum(tf.square(tf.divide(y-y_, y_)), 1), tf.reduce_sum(tf.square(tf.divide(tf.reverse(y, [-1])-y_, y_)), 1)))
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
 
     err = percent_error(y, y_)
@@ -143,7 +143,7 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
     start = t.time()
     i = 0
     diff = 10
-    while m.fabs(diff) > 0.1 and i < 100000:
+    while m.fabs(diff) > 0.1 and i < get_nr_parameters()/10:
         x_batch_sub, y_batch_sub = gen_sub_set(100, x_batch_train, y_batch_train)
         if i % 100 == 0:
             loss_list_train.append(sess.run(loss, feed_dict={x: x_batch_sub, y_: y_batch_sub}))
@@ -170,25 +170,27 @@ def main(file_name_x, file_name_y, dep_file_name, nr_nodes_hidden, nr_hidden_lay
         out2.append(i[1])
     out_corr1 = []
     out_corr2 = []
+    err_list = []
     for i in range(len(y_batch_eval)):
         if np.power(out1[i]-y_batch_eval[i][0], 2) + np.power(out2[i]-y_batch_eval[i][1], 2) < np.power(out2[i]-y_batch_eval[i][0], 2) + np.power(out1[i]-y_batch_eval[i][1], 2):
             out_corr1.append(y_batch_eval[i][0])
             out_corr2.append(y_batch_eval[i][1])
+            err_list.append((out1[i]-y_batch_eval[i][0])/y_batch_eval[i][0])
+            err_list.append((out2[i] - y_batch_eval[i][1]) / y_batch_eval[i][1])
         else:
             out_corr1.append(y_batch_eval[i][1])
             out_corr2.append(y_batch_eval[i][0])
+            err_list.append((out1[i] - y_batch_eval[i][1]) / y_batch_eval[i][1])
+            err_list.append((out2[i] - y_batch_eval[i][0]) / y_batch_eval[i][0])
     dep = [i[0] for i in read_data(dep_file_name)[0:int(0.2*len(x_batch))]]
     sum_out = sess.run(sum, feed_dict={x: x_batch_eval})
 
     out = out1 + out2
     out_corr = out_corr1 + out_corr2
-    err_end = sess.run(err, feed_dict={x: x_batch_eval, y_: y_batch_eval})
-    mean = np.mean(err_end)
-    std = np.std(err_end)
+    mean = np.mean(err_list)
+    std = np.std(err_list)
 
-    return loss_end, mean, std, err_end, out, out_corr, loss_list, loss_list_train, Traningtime, Training_iterations, dep, sum_out
-
-
+    return loss_end, mean, std, err_list, out, out_corr, loss_list, loss_list_train, Traningtime, Training_iterations, dep, sum_out
 
 
 def parameter_sweep():
