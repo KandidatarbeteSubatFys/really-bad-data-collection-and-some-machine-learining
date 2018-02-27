@@ -2,6 +2,7 @@
 
 from parameter_sweep import gen_sub_set
 import tensorflow as tf
+import time as t
 
 def early_stopping(x_batch, y_batch, x_val, y_val, step, loss, iterations, partition=0.1  , save_parameters=false):
     """A regularization for the network. First arguments are the trainingdata for x and y, then the (already declared) trainingstep and lossfunction.
@@ -83,5 +84,5 @@ def early_stopping(x_batch, y_batch, x_val, y_val, step, loss, iterations, parti
     trainingtime2 = end - start
     loss_end = sess.run(loss, feed_dict={x: x_batch_eval, y_: y_batch_eval})
 
-    return opt_iteration, v, trainingtime1, trainingtime2, loss_list1, loss_list2, loss_list_train
+    return opt_iteration, v, trainingtime1, trainingtime2, loss_list1, loss_list2, loss_list_train, loss_end
 
