@@ -4,7 +4,7 @@ from parameter_sweep import gen_sub_set
 import tensorflow as tf
 import time as t
 
-def early_stopping(x_batch, y_batch, x_val, y_val, step, loss, iterations, partition=0.1  , save_parameters=false):
+def early_stopping(x_batch, y_batch, x_val, y_val, step, loss, iterations, partition=0.1  , save_parameters=False):
     """A regularization for the network. First arguments are the trainingdata for x and y, then the (already declared) trainingstep and lossfunction.
     Choose how many iterations it can pass before the validation error must have been updated and also the partition of the data.
     Change save_parameter to true if you want to save the optimal parameters."""
