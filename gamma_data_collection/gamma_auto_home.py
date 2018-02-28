@@ -2,7 +2,10 @@
 import sys
 import os
 def main():
-    #sys.argv is list of arguments. First argument (sys.argv[1]) is the maximum number of guns used in any of the root files. Then you can add as many root files (exempel.root) that you want to read. The last three arguments are the names of the output files (exempel.txt). The first output is the XBe-data, the second is the gundata and the last is the XBsumE-data. So for exampel a possible input from the terminal is:
+    #sys.argv is list of arguments. First argument (sys.argv[1]) is the maximum number of guns used in any of the 
+    #root files. Then you can add as many root files (exempel.root) that you want to read. The last three arguments
+    #are the names of the output files (exempel.txt). The first output is the XBe-data, the second is the gundata and 
+    #the last is the XBesum-data. So for exampel a possible input from the terminal is:
     #python3 gamma_auto_home.py 3 E1.root E2.root xb.txt gun.txt sum.txt
 
     #number_of_partices=number of maximum guns used in any file
@@ -12,7 +15,7 @@ def main():
     for i in range((len(sys.argv)-5)):
         root_files[i]=sys.argv[i+2]
     #output files are made. The first is for the XBe data, the second for the gun
-    #data and the third is for the XBsumE data
+    #data and the third is for the XBesum data
     for i in range(3):
         output_files[i]=sys.argv[(len(sys.argv)-3+i)]
         if os.path.isfile(output_files[i]):
