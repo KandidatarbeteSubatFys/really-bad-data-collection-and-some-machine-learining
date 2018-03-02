@@ -3,7 +3,7 @@ Sh-scripts for doing some basic stuff at Kebnekaise. Filenames are somewhat self
 salloc_node.sh takes arguments:
 
 #1: proj nr e.g. 2017-1-611
-#2: CPU time
+#2: real allocating time (minutes)
 #3: nr of GPUs
 #4: nr of tasks
 #5: if you want whole node type --exclusive
