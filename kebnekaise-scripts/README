@@ -1,0 +1,11 @@
+Sh-scripts for doing some basic stuff at Kebnekaise. Filenames are somewhat self-explanatory. Run by typing . <scriptname>.sh.
+
+salloc_node.sh takes arguments:
+
+#1: proj nr e.g. 2017-1-611
+#2: CPU time
+#3: nr of GPUs
+#4: nr of tasks
+#5: if you want whole node type --exclusive
+
+srun_job.sh uses aquired jobid after allocating a node/nodes.
