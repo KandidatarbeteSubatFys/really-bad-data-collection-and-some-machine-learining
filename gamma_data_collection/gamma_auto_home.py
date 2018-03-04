@@ -55,7 +55,7 @@ def add_zeros_to_gun(number_of_particles):
                 #line includes \n so removes it with rstrip()
                 line=line.rstrip()
                 temp=line.split(' ')
-                f1.write(line+(2*int(number_of_particles)-len(temp))*" 0"+"\n")
+                f1.write(line+(2*int(number_of_particles)-len(temp))*" 0"+" \n")
 
 
 #adds the final data from one root file to the final ouput files
