@@ -1,7 +1,8 @@
-Skapar tre filer, en XBe fil, en gun fil och en XBe_sum file. Nollor läggs till i gunfilen. Klarar obegränsat med
-root-filer som input. Ska någon simuleringarna bara ha en gun så skriv --tree=gunlist,FILE i ggland istället för bara
-filen för att skapa en array istället för en float av gun-datan. Använder os.system() i python för att skriva i
-terminalen och detta har bara testats i debian, men ska fungera för alla linux-system och windows.
+Skapar tre filer, en XBe fil, en gun fil och en XBe_sum file. Nollor läggs till i gun-filen så att alla rader får samma
+dimension. gun-filen innehåller energin och cos(theta) för varje gun. Programmet klarar obegränsat med root-filer som
+input. Ska någon simuleringarna bara ha en gun så skriv --tree=gunlist,FILE i ggland istället för bara filen för att
+skapa en array istället för en float av gun-datan. Använder os.system() i python för att skriva i terminalen och detta
+har bara testats i debian, men ska fungera för alla linux-system (och windows).
 
 De program som måste vara installerade är python och root. Har endast testats för python 3.5.3 med standardpaket
 installerade. Programmet fungerar för root av version 6.12/04, men för versionen 6.04/04 fungerar det ej.
