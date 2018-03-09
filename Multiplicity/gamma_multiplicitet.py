@@ -171,7 +171,7 @@ def main(file_name_x, file_name_y,number_particles):
         y_batch_train.append(list(map(float, tmp_string_list)))
 
 
-    #To get more information regarding the training part, and the whole program, see "Deep learing for experts" on ten
+    #To get more information regarding the training part, and the whole program, see "Deep MNIST for experts" on ten
     #sorflows webpage.
     print('Start training')
     sess = tf.Session()
