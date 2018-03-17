@@ -4,6 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+#IMPORTANT: the input data must be ordered from the smallest number of guns to the largest number of guns.
+#Also important: use approximately the same number of events per each number of guns used.
+
+
 #function for reading file of floats with spaces between them. Not the same as Pontus' function, mine might be a little
 #slower but I made a new because I thought that Pontus' function was causing problems for me, but it was probably
 #something else. Anyway, it works and I havn't bothered switching.
@@ -39,6 +43,45 @@ def just_energies_in_gun(y_batch,number_particles):
     return tmp
 
 
+#Used to get the last index where the (number of guns)=(number of particles)-1.
+def get_last_index_before_highest_number_of_guns(y_batch,number_particles):
+    for i in range(y_batch.shape[0]):
+        tmp = np.trim_zeros(y_batch[i])
+        if tmp.shape[0] == number_particles:
+            return i - 1
+    return -1
+
+
+#Takes in two numpy arrays and shuffles them by their rows the same way
+def shuffle_two_numpy_arrays_the_same_way_by_rows(x_batch,y_batch):
+    if len(x_batch)!=len(y_batch):
+        return -1, -1
+    matrix_to_shuffle = np.c_[x_batch, y_batch]
+    np.random.shuffle(matrix_to_shuffle)
+    return matrix_to_shuffle[:, [i for i in range(len(x_batch[0]))]], matrix_to_shuffle[:, [i for i in range(len(x_batch[0]), len(x_batch[0]) + len(y_batch[0]))]]
+
+
+#Returns an interval of rows for a numpy matrix. In for example matlab you can just write matrix(start_row:end_row,:)
+#but I couldn't find the equivalent for that in python.
+def get_rows_numpy_array(numpy_array,index_first_row, index_last_row):
+    if index_last_row==-1:
+        index_last_row=len(numpy_array)-1
+    return numpy_array[[i for i in range(index_first_row,index_last_row+1)],:]
+
+
+#Converts the gun-matrix converted into matrix of one-hot vectors. The output has the list format, i.e. isn't numpy anymore.
+# Perhaps a bit inefficient to convert to string and then back to float, but this method works nevertheless.
+def get_one_hot_list_matrix_from_numpy_array(y_batch,number_particles):
+    y_batch_without_zeros=[len(np.trim_zeros(row)) for row in y_batch]
+    y_batch_out=[]
+    for i in y_batch_without_zeros:
+        row_str = "0 " * i + str(1) + " " + (number_particles - i) * "0 "
+        row_str = row_str.rstrip()
+        tmp_string_list = row_str.split(' ')
+        y_batch_out.append(list(map(float, tmp_string_list)))
+    return y_batch_out
+
+
 def main(file_name_x, file_name_y,number_particles):
     print('Initializing variables')
 
@@ -55,7 +98,6 @@ def main(file_name_x, file_name_y,number_particles):
     b3 = tf.Variable(tf.ones([128]), dtype=tf.float32)
     W4 = tf.Variable(tf.truncated_normal([128, number_particles + 1], stddev=0.1), dtype=tf.float32)
     b4 = tf.Variable(tf.ones([number_particles + 1]), dtype=tf.float32)
-
 
     #construction of the layers, using relu activation on the hidden layers
     y1 = tf.nn.relu(tf.matmul(x, W1) + b1)
@@ -90,89 +132,68 @@ def main(file_name_x, file_name_y,number_particles):
 
     print('Reading data')
     x_batch = read_data(file_name_x)
-    # quick way to check for number of guns less than there is in the data file by chosing an index to stop on
-    #x_batch=x_batch[0:457576]
     x_batch = np.array(x_batch)
 
     y_batch = read_data(file_name_y)
-    #y_batch = y_batch[0:457576]  # remove later
     y_batch = np.array(y_batch)
 
     y_batch=just_energies_in_gun(y_batch,number_particles)
 
     #Here the index for when the highest-gun data starts is extracted (the data file must be ordered from lowest amount
-    #of guns to highest for this method to work). If the number of particles value is higher than the largest amount of
-    #guns that is used, the highest-gun data will also be evaluated on.
-    index_last_eval=len(x_batch)-1
-    for i in range(y_batch.shape[0]):
-        tmp=np.trim_zeros(y_batch[i])
-        if tmp.shape[0] == number_particles:
-            index_last_eval = i-1
-            break
+    #of guns to highest for this method to work).
+    last_index_before_highest_number_of_guns=get_last_index_before_highest_number_of_guns(y_batch,number_particles)
+    if last_index_before_highest_number_of_guns==-1:
+        print(
+            "Error: No index for last evaluation data found. Check if number_particles is correct or if the data really is ordered from lowest nubmer of guns to highest.")
+        return
 
     #All the data except for the data for the highest amount of guns is extracted
-    x_batch_1_eval=x_batch[[i for i in range(index_last_eval+1)],:]
-    y_batch_1_eval=y_batch[[i for i in range(index_last_eval+1)],:]
+    x_batch_highest_gun_removed=get_rows_numpy_array(x_batch, 0, last_index_before_highest_number_of_guns)
+    y_batch_highest_gun_removed = get_rows_numpy_array(y_batch, 0, last_index_before_highest_number_of_guns)
 
     #The extracted data is then shuffled
-    shuffle_1_eval=np.c_[x_batch_1_eval,y_batch_1_eval]
-    np.random.shuffle(shuffle_1_eval)
-    x_batch_1_eval=shuffle_1_eval[:,[i for i in range(162)]]
-    y_batch_1_eval = shuffle_1_eval[:, [i for i in range(162,162+number_particles)]]
+    x_batch_highest_gun_removed, y_batch_highest_gun_removed = shuffle_two_numpy_arrays_the_same_way_by_rows(x_batch_highest_gun_removed,y_batch_highest_gun_removed)
+    if isinstance(x_batch_highest_gun_removed,int):
+        print("Error when shuffling: x_batch and y_batch not the same length")
+        return
 
     #The shuffled extracted data is divided in a training and a evaluation set
-    x_batch_eval=x_batch_1_eval[[i for i in range(int(0.2*len(x_batch_1_eval)))],:]
-    y_batch_eval = y_batch_1_eval[[i for i in range(int(0.2*len(y_batch_1_eval)))],:]
-    x_batch_train_1_eval = x_batch_1_eval[[i for i in range(int(0.2*len(x_batch_1_eval)),len(x_batch_1_eval))],:]
-    y_batch_train_1_eval = y_batch_1_eval[[i for i in range(int(0.2*len(y_batch_1_eval)),len(y_batch_1_eval))],:]
+    x_batch_eval = get_rows_numpy_array(x_batch_highest_gun_removed, 0, int(0.2*len(x_batch_highest_gun_removed))-1)
+    y_batch_eval = get_rows_numpy_array(y_batch_highest_gun_removed, 0, int(0.2 * len(y_batch_highest_gun_removed))-1)
+    x_batch_train_without_highest_gun_and_zeros = get_rows_numpy_array(x_batch_highest_gun_removed,
+                                                                       int(0.2 * len(x_batch_highest_gun_removed)), -1)
+    y_batch_train_without_highest_gun_and_zeros = get_rows_numpy_array(y_batch_highest_gun_removed,
+                                                                       int(0.2 * len(y_batch_highest_gun_removed)), -1)
 
     #The training set of the extracted data is merged with the highest-number-of-guns data, as well as with zero events
-    x_zeros=np.zeros((int(len(x_batch)/(2*number_particles)),162)) #lägg till minus 1
-    y_zeros = np.zeros((int(len(x_batch)/(2*number_particles)),number_particles))
-    x_batch_highest_number_of_guns=x_batch[[i for i in range(index_last_eval+1,len(x_batch))],:]
-    y_batch_highest_number_of_guns=y_batch[[i for i in range(index_last_eval + 1, len(y_batch))], :]
-    x_batch_highest_number_of_guns_decreased = x_batch_highest_number_of_guns[
-                                               [i for i in range(int(0.8 * len(x_batch_highest_number_of_guns)))], :]
-    y_batch_highest_number_of_guns_decreased = y_batch_highest_number_of_guns[
-                                               [i for i in range(int(0.8 * len(y_batch_highest_number_of_guns)))], :]
-    x_batch_train=np.r_[np.r_[x_zeros,x_batch_highest_number_of_guns_decreased],x_batch_train_1_eval]
-    y_batch_train = np.r_[np.r_[y_zeros, y_batch_highest_number_of_guns_decreased],y_batch_train_1_eval]
+    x_zeros=np.zeros((int(len(x_batch_train_without_highest_gun_and_zeros)/(number_particles-1)),162))
+    y_zeros = np.zeros((int(len(y_batch_train_without_highest_gun_and_zeros) / (number_particles - 1)), number_particles))
+
+    x_batch_highest_number_of_guns=get_rows_numpy_array(x_batch,last_index_before_highest_number_of_guns+1,-1)
+    y_batch_highest_number_of_guns = get_rows_numpy_array(y_batch, last_index_before_highest_number_of_guns + 1, -1)
+    x_batch_highest_number_of_guns_decreased = get_rows_numpy_array(x_batch_highest_number_of_guns,0,len(x_zeros)-1)
+    y_batch_highest_number_of_guns_decreased = get_rows_numpy_array(y_batch_highest_number_of_guns, 0, len(y_zeros) - 1)
+
+    x_batch_train=np.r_[np.r_[x_zeros,x_batch_highest_number_of_guns_decreased],x_batch_train_without_highest_gun_and_zeros]
+    y_batch_train = np.r_[np.r_[y_zeros, y_batch_highest_number_of_guns_decreased],y_batch_train_without_highest_gun_and_zeros]
 
     #The training data is shuflled
-    shuffle_train = np.c_[x_batch_train, y_batch_train]
-    np.random.shuffle(shuffle_train)
-    x_batch_train = shuffle_train[:, [i for i in range(162)]]
-    y_batch_train = shuffle_train[:, [i for i in range(162,162+number_particles)]]
+    x_batch_train, y_batch_train = shuffle_two_numpy_arrays_the_same_way_by_rows(x_batch_train,y_batch_train)
 
-    # the above was more general, but now for the multiplicity
+    # The above was more general than what would be needed to determine the multiplicity. But the following is more specific:
 
     #the evaluation input data is turned from a numpy array to a list
     x_batch_eval=x_batch_eval.tolist()
-    #indices is the number of guns for each row
-    indices = [len(np.trim_zeros(row)) for row in y_batch_eval]
-    #the number of guns is now converted into one-hot vectors. Perhaps a bit inefficient to convert to string and then
-    #back to float, but this method works nevertheless.
-    y_batch_eval=[]
-    for i in indices:
-        row_str="0 "*i+str(1)+" "+(number_particles-i)*"0 "
-        row_str = row_str.rstrip()
-        tmp_string_list = row_str.split(' ')
-        y_batch_eval.append(list(map(float, tmp_string_list)))
+    #The number of guns matrix is now converted into a matrix of one-hot vectors. Each row representing the number of guns for that event.
+    y_batch_eval=get_one_hot_list_matrix_from_numpy_array(y_batch_eval,number_particles)
 
-
-    #same procedure as above
+    #same procedure for the training data
     x_batch_train = x_batch_train.tolist()
-    indices = [len(np.trim_zeros(row)) for row in y_batch_train]
-    y_batch_train = []
-    for i in indices:
-        row_str = "0 " * i + str(1) +" " + (number_particles-i)*"0 "
-        row_str = row_str.rstrip()
-        tmp_string_list = row_str.split(' ')
-        y_batch_train.append(list(map(float, tmp_string_list)))
+    y_batch_train = get_one_hot_list_matrix_from_numpy_array(y_batch_train,number_particles)
 
 
-    #To get more information regarding the training part, and the whole program, see "Deep MNIST for experts" on ten
-    #sorflows webpage.
+    #Now the trainging begins. To get more information regarding the training part, and the whole program, see
+    # "Deep learing for experts" on tensorflows webpage.
     print('Start training')
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
@@ -183,7 +204,7 @@ def main(file_name_x, file_name_y,number_particles):
     iterations = []
 
     #Number in "range"=number of training iterations
-    for i in range(100000):
+    for i in range(20000):
         #here 100 reandomly selected rows from the training set are extracted
         x_batch_sub, y_batch_sub = gen_sub_set(100, x_batch_train, y_batch_train)
         if i % 100 == 0:
@@ -203,17 +224,19 @@ def main(file_name_x, file_name_y,number_particles):
     Traningtime = end - start
     print("Trainingtime: " + str(int(Traningtime))+" seconds")
 
-    #Basic plotting using matplotlib.pyplot
+    #Basic plotting of accuracy and training loss function using matplotlib.pyplot. Havn't figured out how to change the fontsize though.
     fig, ax = plt.subplots(2, figsize=(20, 10)) #fig=entire figure, ax=subplots
     ax[0].plot(iterations[0:-1], loss_list_train[0:-1])
     ax[0].set(ylabel='Loss function', xlabel='Iteration')
     ax[1].plot(iterations[0:-1], accuracy_list_eval[0:-1])
     ax[1].set(ylabel='Accuracy', xlabel='Iterations')
+
     plt.show(fig)
 
 if __name__ == '__main__':
-    #main("XBe_01_10_up_to_7.txt", "gun_01_10_up_to_7.txt", 7)
-    main("XBe_5_up_to_7.txt", "gun_5_up_to_7.txt", 7)
+    main("XBe_01_10_up_to_7.txt", "gun_01_10_up_to_7.txt", 7)
+    #main("XBe_5_up_to_7.txt", "gun_5_up_to_7.txt", 7)
+    #main("XBe_5_up_to_7_90_percent.txt", "gun_5_up_to_7_90_percent.txt", 7)
     #main("XBe_2gun.txt", "gun_2gun.txt", 2)
     #main("XBe_5_up5_liten.txt", "gun_5_up5_liten.txt", 5)
 
