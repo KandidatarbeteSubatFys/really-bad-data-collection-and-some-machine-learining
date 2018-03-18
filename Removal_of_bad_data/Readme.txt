@@ -13,7 +13,7 @@ same length.)
 XBsum: Energy (Just the sum of XBe)
 
 It is also IMPORTANT that the input text files are ordered from the lowest number of guns used to the highest number of guns used. So, for
-example if your data consists of events with 1, 2 and 3 guns used, then the events where 1 gus is used should be first in the data files,
+example if your data consists of events with 1, 2 and 3 guns used, then the events where 1 gun is used should be first in the data files,
 then should the event where 2 guns were used come and the events where 3 guns where used should come last.
 
 The program has 7 compulsory arguments: percentage input_XBe.txt input_gun.txt input_XBsum.txt output_Xbe.txt output_gun.txt
