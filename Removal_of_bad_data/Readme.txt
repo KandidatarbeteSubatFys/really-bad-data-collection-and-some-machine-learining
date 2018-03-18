@@ -8,8 +8,8 @@ in the data text files should be:
 
 XBe: Energy_1 Energy_2 ... Energy_n  (One energy for each crystal)
 gun: Energy_1 cos(theta_1) Energy_2 cos(theta_2) ...  (If the maximum number of particles of all the events in the data
-set is bigger than the number of guns used in an event, then the data for that event is filled up with zeros so that every row has the same
-length.
+set is bigger than the number of guns used in an event, then the data for that event is filled up with zeros so that every row has the
+same length.)
 XBsum: Energy (Just the sum of XBe)
 
 It is also IMPORTANT that the input text files are ordered from the lowest number of guns used to the highest number of guns used. So, for
