@@ -1,5 +1,5 @@
 This program extracts data from data files where the total deposited energy is more than a certain percentage of the total gun energy.
-The program also removes some more data so that you get the same number of events per number of guns used.
+The program also removes some more data so that you get the same number of events per each number of guns used.
 
 This program is used when you have your textfiles with data for each event of: the deposited energy for each crystal (XBe in the code),
 the energy and cos(theta) for the guns used (gun in the code) and the sum of the deposited energy (XBsum in the code). XB stands for
