@@ -24,7 +24,7 @@ event to be saved.
 
 Example: You have the three data files XBe.txt gun.txt XBsum.txt made for example from events between 1 and 5 guns used, and you want to
 remove the events where the total deposited energy is less than 90 % of the gun energy and you want the same number of events per each
-number of guns. Then you place the python script in the same as the files and place yourself in that folder and type:
+number of guns. Then you place the python script in the same directory as the files and place yourself in that directory and type:
 python3 only_certain_percentage_dep_and_same_amount_for_each_number_of_guns.py 90 XBe.txt gun.txt XBsum.txt XBe_90%.txt gun_90%.txt 
 XBsum_90%.txt
 
