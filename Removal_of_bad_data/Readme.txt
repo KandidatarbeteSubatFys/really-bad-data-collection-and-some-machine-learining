@@ -19,7 +19,8 @@ then should the event where 2 guns were used come and the events where 3 guns we
 The program has 7 compulsory arguments: percentage input_XBe.txt input_gun.txt input_XBsum.txt output_Xbe.txt output_gun.txt
 output_XBsum.txt
 
-The percentage argument is the percentage that the total deposited energy (XBsum) has to be larger than for the event to be saved.
+The percentage argument is the percentage of the total gun energy that the total deposited energy (XBsum) has to be larger than for the
+event to be saved.
 
 Example: You have the three data files XBe.txt gun.txt XBsum.txt made for example from events between 1 and 5 guns used, and you want to
 remove the events where the total deposited energy is less than 90 % of the gun energy and you want the same number of events per each
