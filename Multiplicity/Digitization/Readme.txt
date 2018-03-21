@@ -10,5 +10,5 @@ You will always get the same amount of events for each number of particles.
 
 Tip 1: Set percentage=0 for no requirement on deposited energy
 Tip 2: Let say you want x event for each number of particles. Then you will have to simulate
-(desired_number_of_events)*sum_(k=lowest_number_of_particles)^(highest_number_of_particles) k/lowest_number_of_particles
+x*sum_(k=lowest_number_of_particles)^(highest_number_of_particles) k/lowest_number_of_particles
 amount of single gun events.
