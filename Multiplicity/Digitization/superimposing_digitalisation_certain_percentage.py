@@ -17,16 +17,6 @@ def read_data_to_numpy(file,rows,cols):
     return out
 
 
-# Not used. Function used for getting multiple rows from a matrix (list format matrix, not numpy).
-def get_rows_in_interval(matrix,start_row, end_row):
-    out=[]
-    if end_row==-1:
-        end_row=len(matrix)-1
-    for i in range(start_row,end_row+1):
-        out.append(matrix[i])
-    return out
-
-
 # function used for getting multiple rows from a matrix (numpy format matrix, not list).
 def get_rows_in_interval_numpy(numpy_matrix,start_row_index, end_row_index):
     if end_row_index==-1:
@@ -37,19 +27,6 @@ def get_rows_in_interval_numpy(numpy_matrix,start_row_index, end_row_index):
         out[index]=numpy_matrix[i]
         index=index+1
     return out
-
-# Not used. Functino for matrix addition
-def matrix_addition(A,B):
-    A=np.array(A)
-    B=np.array(B)
-    if len(A)==0:
-        A=np.zeros((len(B),len(B[0])))
-    if len(B)==0:
-        B=np.zeros((len(A),len(A[0])))
-    if len(A)!=len(B) or len(A[0])!=len(B[0]):
-        return -1
-    sum=A+B
-    return sum.tolist()
 
 
 # adds multiple rows of same size to one
@@ -65,14 +42,6 @@ def flatten_and_add_zeros(matrix,highest_number_of_particles):
     flat_list=np.concatenate((flat_list,np.zeros(2*highest_number_of_particles-len(flat_list))),axis=0)
     return flat_list
 
-# Unused. Same as crystal_energies_sigma_5_percent but for a matrix.
-def crystal_energies_sigma_5_percent_matrix(superimposed_crystal_energy_matrix):
-    out=np.zeros((len(superimposed_crystal_energy_matrix),len(superimposed_crystal_energy_matrix[0])))
-    for i in range(len(superimposed_crystal_energy_matrix)):
-        for j in range(len(superimposed_crystal_energy_matrix[0])):
-            out[i][j]=np.random.normal(superimposed_crystal_energy_matrix[i][j],0.05*superimposed_crystal_energy_matrix[i][j],1)
-    return out.tolist()
-
 
 # this function gives the superimposed events some randomness. For each crystal energy, the energy is used as expected value of
 # a normaldistribution and the variance is 5% of the energy.
@@ -81,21 +50,6 @@ def crystal_energies_sigma_5_percent(superimposed_crystal_energy_list):
     for i in range(len(superimposed_crystal_energy_list)):
         out[i]=np.random.normal(superimposed_crystal_energy_list[i],0.05*superimposed_crystal_energy_list[i],1)
     return out
-
-
-#Not used. Function for reading multiple lines from a file.
-def read_line_interval(file,start_line,end_line):
-    out=[]
-    with open(file) as fp:
-        for i, line in enumerate(fp):
-            if i <= end_line and i >=start_line:
-                line=line.rstrip()
-                tmp_string_list = line.split(' ')
-                out.append(list(map(float, tmp_string_list)))
-
-            elif i > end_line:
-                break
-    return np.array(out)
 
 
 # Returns the amount of rows of a file in an efficient way
