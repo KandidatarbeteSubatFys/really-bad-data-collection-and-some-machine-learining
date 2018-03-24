@@ -46,10 +46,10 @@ def flatten_and_add_zeros(matrix,highest_number_of_particles):
 # this function gives the superimposed events some randomness. For each crystal energy, the energy is used as expected value of
 # a normaldistribution and the variance is 5% of the energy.
 def crystal_energies_sigma_5_percent(superimposed_crystal_energy_list):
-    out=np.zeros(len(superimposed_crystal_energy_list))
     for i in range(len(superimposed_crystal_energy_list)):
-        out[i]=np.random.normal(superimposed_crystal_energy_list[i],0.05*superimposed_crystal_energy_list[i],1)
-    return out
+        if superimposed_crystal_energy_list[i]!=0:
+            superimposed_crystal_energy_list[i]=np.random.normal(superimposed_crystal_energy_list[i],0.05*superimposed_crystal_energy_list[i],1)
+    return superimposed_crystal_energy_list
 
 
 # Returns the amount of rows of a file in an efficient way
