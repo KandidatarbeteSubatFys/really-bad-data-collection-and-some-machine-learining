@@ -199,19 +199,6 @@ def main(npz_file,number_particles,number_of_hidden_layers,number_of_nodes_per_h
     plt.show(fig)
 
 if __name__ == '__main__':
-    #main("XBe_01_10_up_to_7.txt", "gun_01_10_up_to_7.txt", 7)
-    #main("XBe_5_up_to_7.txt", "gun_5_up_to_7.txt", 7)
-    #main("XBe_5_up_to_7_90_percent.txt", "gun_5_up_to_7_90_percent.txt", 7)
-    #main("XBe_up_to_7_5MeV_2252068events_digitized.txt", "XB_gun_up_to_7_5MeV_2252068events_digitized.txt", 7)
-    #main("XBe_1gun_0dot1_to_10MeV_10000000events_digitized.txt", "XB_gun_1gun_0dot1_to_10MeV_10000000events_digitized.txt", 7)
-    #main("XBe_2gun.txt", "gun_2gun.txt", 2)
-    #main("XBe_5_up5_liten.txt", "gun_5_up5_liten.txt", 5)
-    #main("XBe_up_to_7guns_0dot1_to_10MeV_2200000events_digitized.txt", "XB_gun_up_to_7guns_0dot1_to_10MeV_2200000events_digitized.txt", 7)
-    #main("XBe_up_to_7guns_0dot1_to_10MeV_2292267events_sigma_eq_0dot05_not_sup.txt", "XB_gun_up_to_7guns_0dot1_to_10MeV_2292267events_sigma_eq_0dot05_not_sup.txt", 7)
-    #main("XBe_up_to_7guns_0dot1_to_10MeV_ca2000000events_digitized_90percent.txt","XB_gun_up_to_7guns_0dot1_to_10MeV_ca2000000events_digitized_90percent.txt", 7,3,1024)
-    #main("XBe_up_to_7guns_5MeV_ca2000000events_digitized_90percent.txt","XB_gun_up_to_7guns_5MeV_ca2000000events_digitized_90percent.txt", 7)
-    #main("XBe_up_to_7guns_5dot5_to_6dot_6_ca2200000events_digitized_0percent.txt","XB_gun_up_to_7guns_5dot5_to_6dot_6_ca2200000events_digitized_0percent.txt", 7)
-    #main("XBe_up_to_7guns_5dot5_to_6dot_6_ca2000000events_digitized_90percent.txt","XB_gun_up_to_7guns_5dot5_to_6dot_6_ca2000000events_digitized_90percent.txt", 7,3,128)
     main("ord_data_set_XB_up_to_7_5MeV_ca2000000events_digitized_90percent.npz", 7,3,128)
 
 
