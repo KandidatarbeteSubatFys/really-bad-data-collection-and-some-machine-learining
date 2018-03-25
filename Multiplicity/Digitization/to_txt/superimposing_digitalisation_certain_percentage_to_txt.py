@@ -3,7 +3,7 @@ import numpy as np
 
 
 # Reads data from a space delimited text file of floats and stores the data in a numpy array
-# Do not now if there is a faster way, but this works pretty ok at least.
+# Do not know if there is a faster way, but this works pretty ok at least.
 def read_data_to_numpy(file,rows,cols):
     out=np.zeros((rows,cols))
     with open(file, 'r') as f:
