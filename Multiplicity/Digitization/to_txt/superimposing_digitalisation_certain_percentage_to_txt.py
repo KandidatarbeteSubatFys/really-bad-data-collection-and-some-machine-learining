@@ -87,7 +87,7 @@ def only_certain_percentage(crystal_input_matrix,gun_input_matrix,percentage):
 
 
 def main(lowest_number_of_particles, highest_number_of_particles, percentage,crystal_energy_input_file, gun_input_file, crystal_energy_output_file, gun_output_file, total_dep_energy_output_file):
-    print("Time example: takes around 20 minutes for 10 000 000 events for particles from 1 to 7 on pclab-232")
+    print("Time example: takes around 10 minutes for 10 000 000 events for particles from 1 to 7 on pclab-232")
 
     print("Reading data")
     number_of_crystals = 162
