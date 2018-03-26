@@ -1,4 +1,5 @@
-Skapar tre filer, en med kristallenergierna, en med gun data och en med totala deponerade energin. Nollor läggs till i gun-filen så att alla rader får samma
+Skapar tre filer, en med kristallenergierna, en med gun data och en med totala deponerade energin. Nollor läggs till i gun-filen så att 
+alla rader får samma
 dimension. gun-filen innehåller energin, cos(theta) och phi (från -pi till pi) för varje gun. Programmet klarar obegränsat med root-filer
 som input. Ska någon simuleringarna bara ha en gun
 så skriv --tree=gunlist,FILE i ggland istället för bara filen för att skapa en array istället för en float av gun-datan.
