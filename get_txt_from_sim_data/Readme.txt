@@ -12,7 +12,7 @@ get_txt_from_sim_data.py, root_loop.C, XB_h102_backup.C, dali2_h102_backup.C och
 
 Exempel: fyra root filer R1.root (1 guns) och R2.root (2 gun) R3.root (3 guns) R4.root (4 guns) vill skrivas till filer
 med namnen output_crystal.txt, output_gun.txt och output_tot_dep.txt (filnamnen är valbara, men antalet utdata filer måste
-vara tre och ordingen är alltid XBe, gun och XBesum). Alla root filer har skapats i crystal ball. Första argumentet är det maximala
+vara tre och ordingen är alltid kristall energier, gun data och tot_dep). Alla root filer har skapats i crystal ball. Första argumentet är det maximala
 antalet guns som använts i 
 någon av filerna. I detta exempel är det ju 4. Så i rätt mapp skriver man:
 python3 get_txt_from_sim_data.py 4 XB R1.root R2.root R3.root R4.root output_crystals.txt output_gun.txt output_totaldep.txt
