@@ -12,8 +12,8 @@ def main():
     output_files = ["" for x in range(3)]
     for i in range((len(sys.argv) - 6)):
         root_files[i] = sys.argv[i + 3]
-    # output files are made. The first is for the XBe data, the second for the gun
-    # data and the third is for the XBEsum data
+    # output files are made. The first is for the crystal energy data, the second for the gun
+    # data and the third is for the total deponated energy data
     for i in range(3):
         output_files[i] = sys.argv[(len(sys.argv) - 3 + i)]
         if os.path.isfile(output_files[i]):
@@ -60,22 +60,22 @@ def add_zeros_and_shuffle_gun(number_of_particles):
                 line = line.rstrip()
                 string_list = line.split(' ')
                 f1.write(line + (3 * int(number_of_particles) - len(string_list)) * " 0" + " \n")
-                # f1.write(line + (2 * int(number_of_particles) - len(tmp_string_list)) * " 0" + " \n")
+                # f1.write(line + (2 * int(number_of_particles) - len(tmp_string_list)) * " 0" + " \n") without phi
 
 
 # adds the final data from one root file to the final ouput files
 def add_to_final_files(output_files):
-    # appends the XBe data
+    # appends the crystal energy data
     with open("crystal_energies.txt") as f:
         with open(output_files[0], "a") as f1:
             for line in f:
                 f1.write(line)
     # appends the gun data
-    with open("tempfile.txt") as f:  # change to gamma_gunTVals if not adding zeros
+    with open("tempfile.txt") as f:  # change to gun_data.txt if not adding zeros
         with open(output_files[1], "a") as f1:
             for line in f:
                 f1.write(line)
-    # appends the XBEsum data
+    # appends the tot_dep data
     with open("sum_of_dep_energies.txt") as f:
         with open(output_files[2], "a") as f1:
             for line in f:
