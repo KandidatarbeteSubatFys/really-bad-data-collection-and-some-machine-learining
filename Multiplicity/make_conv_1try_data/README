@@ -1,1 +1,2 @@
-Use this program on the data from the make_data.py program to create data suitible for the gamma_multiplicity.py. Unfortunately this takes a while so I would be thankful if anyone could optimize it.
+Use this program on the data from the make_data.py program to create data suitible for the gamma_multiplicity.py.
+Unfortunately this takes a while so I would be thankful if anyone could optimize it.
