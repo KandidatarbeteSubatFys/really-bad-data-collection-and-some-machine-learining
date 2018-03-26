@@ -3,7 +3,7 @@ Should not be limited to one detector, should for example work on both crystal b
 
 Steps on how to use it:
 1) Simulate many single foton events in ggland (geant4) with sigma_e=0 (i.e try to not have any randomness/digitizer)
-2) Use gamma_auto_home.py to convert the root file into three text files (crystal energies, gun data and total deposited
+2) Use get_sim_data_from_root_to_txt.py to convert the root file into three text files (crystal energies, gun data and total deposited
 energy).
 3) Use superimpose_digitize_percentage.py to superimpose the single foton events the way you want. It will add
 sigma_e=5% after the superimposition is done. There is also an option to not use the foton events where less than for
