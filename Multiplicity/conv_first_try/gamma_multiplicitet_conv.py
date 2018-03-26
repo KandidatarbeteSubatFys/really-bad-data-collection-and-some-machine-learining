@@ -105,7 +105,7 @@ def main(conv_npz, number_particles, number_of_hidden_layers, number_of_nodes_pe
     iterations = []
 
     # Number in "range"=number of training iterations
-    for i in range(20000):
+    for i in range(100000):
         # here 100 reandomly selected rows from the training set are extracted
         x_batch_sub, y_batch_sub = gen_sub_set(100, x_batch_train, y_batch_train)
         if i % 100 == 0:
