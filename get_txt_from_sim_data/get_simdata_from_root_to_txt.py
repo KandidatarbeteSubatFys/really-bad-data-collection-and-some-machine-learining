@@ -4,13 +4,6 @@ import numpy as np
 
 
 def main():
-    # sys.argv is list of arguments. First argument (sys.argv[1]) is the maximum
-    # number of guns used in any of the root files. The second argument is either XB or dali2. Then you can add as many root
-    # files (exempel.root) that you want to read. The last three arguments are the
-    # names of the output files (exempel.txt). The first output is the XBe-data, the
-    # second is the gundata and the last is the XBEsum-data. So for exampel a
-    # possible input from the terminal is:
-    # python3 get_simdata_from_root_to_txt.py 3 E1.root E2.root crystals.txt gun.txt sum.txt
 
     # number_of_partices=number of maximum guns used in any file
     number_of_particles = sys.argv[1]
