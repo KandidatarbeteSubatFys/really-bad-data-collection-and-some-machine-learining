@@ -15,7 +15,7 @@ med namnen output_crystal.txt, output_gun.txt och output_tot_dep.txt (filnamnen 
 vara tre och ordingen är alltid kristall energier, gun data och tot_dep). Alla root filer har skapats i crystal ball. Första argumentet är det maximala
 antalet guns som använts i 
 någon av filerna. I detta exempel är det ju 4. Så i rätt mapp skriver man:
-python3 get_txt_from_sim_data.py 4 XB R1.root R2.root R3.root R4.root output_crystals.txt output_gun.txt output_totaldep.txt
+python3 get_sim_data_from_root_to_txt.py 4 XB R1.root R2.root R3.root R4.root output_crystals.txt output_gun.txt output_totaldep.txt
 
 Man behöver inte ordna root-filerna efter antal gun.
 
