@@ -64,7 +64,7 @@ def add_rows_to_one(matrix):
 # so that every row is the same length.
 def flatten_and_add_zeros(matrix,highest_number_of_particles):
     flat_numpy=matrix.flatten()
-    flat_numpy=np.concatenate((flat_numpy,np.zeros(2*highest_number_of_particles-len(flat_numpy))),axis=0)
+    flat_numpy=np.concatenate((flat_numpy,np.zeros(3*highest_number_of_particles-len(flat_numpy))),axis=0)
     return flat_numpy
 
 # Unused. Same as crystal_energies_sigma_5_percent but for a matrix.
