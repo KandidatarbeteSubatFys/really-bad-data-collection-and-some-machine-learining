@@ -21,7 +21,8 @@ def early_stopp_std(x_batch, y_batch, x, y_, y, step, loss, sess, save_path, upd
     Set retraining to "True" if the network should be retrained instead of restored.
 
     It returns the time for the whole training, the time until the optimal value has been reached, total iterations, optimal iteration, loss_end
-    loss list for the training and for the evaluation and a list with all the mean values. """
+    loss list for the training and for the evaluation and a list with all the mean values. 
+    If retraining = False (default) you also need to specify 4 'dummies' which take the returned value of None. """
 
     x_batch_eval = x_batch[0:int(0.01 * len(x_batch))]  # batch for evaluating
     x_batch_train = x_batch[int(0.01 * len(x_batch)):-1]  # batch for training
