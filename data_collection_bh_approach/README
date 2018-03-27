@@ -1,0 +1,4 @@
+>> OBS: NOT FINISHED
+
+First attempts to extract data using the black hole approach. h102::Loop() looks for particles entering the surrounding black hole
+and throws the event away if it finds any.
