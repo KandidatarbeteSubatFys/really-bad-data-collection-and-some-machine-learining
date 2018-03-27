@@ -108,7 +108,7 @@ def def_architecture(x, name_of_architectures, input_size=None, output_size=None
         raise ValueError('Name of arcitecture is not recognized')
 
 
-def split_energy_angle_comb(y, y_, num_splits, lam=1, tree=True):
+def split_energy_angle_comb(y, y_, num_splits, lam=1, tree=True, off_set=0):
     """Loss function used when the network predict energy's and cos(theta) of an arbitrary number of particles. The
     energy is normalized and summed with the angle quadratic. It looks at all combination so se the right match
     between the predicted and the goal values. The energy's and angel is always acossieated so just the combination
@@ -123,14 +123,14 @@ def split_energy_angle_comb(y, y_, num_splits, lam=1, tree=True):
     """
     splited_y = tf.split(y, num_splits, axis=1)                                         # Split y in particle blocks
     splited_y_ = tf.split(y_, num_splits, axis=1)                                       # Split y_ in particle blocks
-    temp_shape = tf.shape(tf.split(splited_y[0], 2, axis=1))                            # Shape of batch                    ToDo: look att this, should maby be [0] after split.
+    temp_shape = tf.shape(tf.split(splited_y[0], 2, axis=1))                            # Shape of batch                    ToDo: look att this, should maybe be [0] after split.
 
     def one_comb_loss(splited_y, splited_y_, index_list):                               # Nested funk to calc loss for a
         temp = tf.zeros(temp_shape, dtype=tf.float32)                                   # given permutation, index_list.
         for i in range(len(index_list)):                                                # loop over particle's.
             E, cos = tf.split(splited_y[i], 2, axis=1)                                  # Split energy and angel
             E_, cos_ = tf.split(splited_y_[index_list[i]], 2, axis=1)                   # -II-
-            temp = temp + lam*tf.square(tf.divide(E-E_, E_)) + tf.square(cos - cos_)    # Add loss iterative
+            temp = temp + lam*tf.square(tf.divide(E-E_, E_+off_set)) + tf.square(cos - cos_)    # Add loss iterative
         return temp                                                                     # Return the loss
 
     def minimize_step(tensor_list):                 # Nested funk, one step in the tree structure.
@@ -156,14 +156,13 @@ def split_energy_angle_comb(y, y_, num_splits, lam=1, tree=True):
     return tf.reduce_mean(loss)                                             # Returns the men over the batch.
 
 
-def min_sqare_loss_combination(y, y_, lam=1):
+def min_sqare_loss_combination(y, y_, lam=1, off_set=0):
     """Equivalent split_energy_angle_comb but act on list insted of tensors. A single evens should just be given. Is
     used to match predicted and correct data for data analysis.
     Args:   y: list predicted.
             y_: list correct.
             lam: float weight between angle and energy.
     Out: index_min: list of the index comb that had min loss, the right matching.
-
     Note: A single event should be given, not a batch!
     """
     if not len(y) == len(y_):
@@ -174,7 +173,85 @@ def min_sqare_loss_combination(y, y_, lam=1):
     for index_list in it.permutations(range(int(len(y)/2)), int(len(y)/2)):     # Looping over all permutations.
         temp = 0
         for i in range(int(len(y)/2)):                                          # Successively adding up the loss.
-            temp = temp + lam*np.power((y[2*i] - y_[2*index_list[i]])/y_[2*index_list[i]], 2) + np.power(y[2*i+1] - y_[2*index_list[i]+1], 2)
+            temp = temp + lam*np.power((y[2*i] - y_[2*index_list[i]])/(y_[2*index_list[i]] + off_set), 2) + np.power(y[2*i+1] - y_[2*index_list[i]+1], 2)
+
+        if temp < temp_min:                                 # If loss is less the min, save loss and the permutation.
+            temp_min = temp
+            index_min = index_list
+
+    if index_min == False:
+        raise ValueError('Something is horribly wrong /Pontus ')
+
+    return index_min                                        # Return the permutation with min loss.
+
+
+def split_energy_angle_angle_comb(y, y_, num_splits, lam=1, lam2=1, tree=True, off_set=0):
+    """Loss function used when the network predict energy's, cos(theta) and phi of an arbitrary number of particles. The
+    energy is normalized and summed with the angles quadratic. It looks at all combination so se the right match
+    between the predicted and the goal values. The energy's and angel is always acossieated so just the combination
+    of the energy angle block.
+    Args:   y: tensor predicted values alternating energy and angel data.
+            y_: tensor the 'correct' y.
+            num_split: int the number of 'blocks', the number of particles.
+            lam: float a weigting between the energy and angle in the loss function.
+            tree: boolean if true, the minimum operator will be used in a tree structure
+                          if false, the minimum operator will just be taken iterative.
+    Out:    loss: tensor a network for calculating the loss.
+    """
+    splited_y = tf.split(y, num_splits, axis=1)                                         # Split y in particle blocks
+    splited_y_ = tf.split(y_, num_splits, axis=1)                                       # Split y_ in particle blocks
+    temp_shape = tf.shape(tf.split(splited_y[0], 3, axis=1)[0])                         # Shape of batch                    ToDo: look att this, should maybe be [0] after split.
+
+    def one_comb_loss(index_list):                                                      # Nested funk to calc loss for a
+        temp = tf.zeros(temp_shape, dtype=tf.float32)                                   # given permutation, index_list.
+        for i in range(len(index_list)):                                                # loop over particle's.
+            E, cos, phi = tf.split(splited_y[i], 3, axis=1)                             # Split energy, angle and angle
+            E_, cos_, phi_ = tf.split(splited_y_[index_list[i]], 3, axis=1)             # -II-
+            temp = temp + lam * tf.square(tf.divide(E - E_, E_ + off_set)) + tf.square(cos - cos_) + lam2*tf.square(tf.mod(phi - (phi_+np.pi) + np.pi, 2*np.pi) - np.pi)/(2*np.pi*1000)  # Add loss iterative
+        return temp                                                                     # Return the loss
+
+    def minimize_step(tensor_list):                 # Nested funk, one step in the tree structure.
+        if len(tensor_list) % 2 == 0:               # Even number of losses, find minimum of between pairs.
+            return [tf.minimum(tensor_list[i], tensor_list[i+1]) for i in range(0, len(tensor_list), 2)]
+        else:                                       # Odd number of losses, find min between pairs, last unpaired.
+            new_list_of_tensors = [tf.minimum(tensor_list[i], tensor_list[i+1]) for i in range(0, len(tensor_list)-1, 2)]
+            new_list_of_tensors.append(tensor_list[-1])     # Append the unpaired loss.
+            return new_list_of_tensors
+
+    # All losses in a list. Inner loop over all permutations.
+    list_of_tensors = [one_comb_loss(index_list) for index_list in it.permutations(range(num_splits), num_splits)]
+
+    if tree == False:
+        loss = tf.divide(tf.constant(1, dtype=tf.float32), tf.zeros(temp_shape, dtype=tf.float32))  # Init inf loss
+        for i in range(len(list_of_tensors)):
+            loss = tf.minimum(loss, list_of_tensors[i])                     # Successive min, with previous best.
+    else:                                                                   # Tree structure.
+        while len(list_of_tensors) > 1:                                     # while nr loss > 1.
+            list_of_tensors = minimize_step(list_of_tensors)                # Successive min, returns a smaller list.
+        loss = list_of_tensors[0]                                           # Bind best to loss name.
+
+    return tf.reduce_mean(loss)                                             # Returns the mean over the batch.
+
+
+def min_sqare_loss_combination_phi(y, y_, lam=1, lam2=1, off_set=0):
+    """Equivalent to split_energy_angle_angle_comb but act on a list insted of tensors. A single evens should just be given. Is
+    used to match predicted and correct data for data analysis.
+    Args:   y: list predicted.
+            y_: list correct.
+            lam: float weight between angle and energy.
+    Out: index_min: list of the index comb that had min loss, the right matching.
+    Note: A single event should be given, not a batch!
+    """
+    if not len(y) == len(y_):
+        raise ValueError('y and y_ most be of same length')
+
+    index_min = False
+    temp_min = np.inf                                                           # Init min loss to inf.
+    for index_list in it.permutations(range(int(len(y)/3)), int(len(y)/3)):     # Looping over all permutations.
+        temp = 0
+        for i in range(int(len(index_list)/3)):                                          # Successively adding up the loss.
+            temp = temp + lam*np.power((y[3*i] - y_[3*index_list[i]])/(y_[3*index_list[i]] + off_set), 2) +\
+                   np.power(y[3*i+1] - y_[3*index_list[i]+1], 2) + lam2*np.power(np.mod(y[3*i+2]-(y[3*index_list[i]+2]+np.pi) + np.pi, 2*np.pi) - np.pi, 2)/(2*np.pi)
 
         if temp < temp_min:                                 # If loss is less the min, save loss and the permutation.
             temp_min = temp
@@ -220,18 +297,14 @@ def accuracy(y, y_, number_of_partikles, threshold=0.05):
 
 def get_nr_parameters():
     """Calculate the number of (trainable) parameters that has been initiated. Note, often tensors are initiated
-    globaly and may be stored between runs in a parametersweep, in that case all previous trainable varibles will also
+    globally and may be stored between runs in a parametersweep, in that case all previous trainable varibles will also
     be seen by the function.
     Out:    unnamed: float number of trainable variables.
     """
     return np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])
 
 
-
-
-
-
-
 if __name__ == '__main__':
-    print( 'Some methods concerning loss functions, define networks and training in tensorflow.')
+    print('Some methods concerning loss functions, define networks and training in tensorflow.')
     print('--Spring 2018; ce2018')
+

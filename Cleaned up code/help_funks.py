@@ -30,23 +30,26 @@ def read_data(file, fill_out_to=None):
     return out                                                      # and appends it to out.
 
 
-def randomize_content(x_batch, y_batch):
+def randomize_content(*args):
     """Randomize the internal order of two lists but still keep the relation between the events in the different files.
     Args:   x_batch: list A list where every row internal list is associated with the same row in y_batch.
             y_batch: list see x_batch
     Out:    new_x_batch, new_y_batch: randomized versions of x_batch and y_batch.
     """
-    if not len(x_batch) == len(y_batch):
-        raise TypeError('Batch x and y most be of same size /Pontus')
+    for arg in args:
+        if not isinstance(arg, list):
+            raise TypeError('All input arguments must be of type list. /Pontus')
+        elif not len(args[0]) == len(arg):
+            raise TypeError('Batches most be of same size /Pontus')
 
-    index_list = shuffle([i for i in range(len(x_batch))])              # All incises of the x_batch list shuffled.
-    new_x_batch = []
-    new_y_batch = []
+    index_list = [i for i in range(len(args[0]))]                        # All incises of the x_batch list shuffled.
+    shuffle(index_list)
+    out = [[] for i in range(len(args))]
     for i in index_list:                                                # Place the content of x_batch and y_batch
-        new_x_batch.append(x_batch[i])                                  # in the order of index_list into the output
-        new_y_batch.append(y_batch[i])
+        for j in range(len(args)):
+            out[j].append(args[j][i])                                  # in the order of index_list into the output
 
-    return new_x_batch, new_y_batch
+    return tuple(out)
 
 
 def gen_sub_set(batch_size, batch_x, batch_y):
@@ -140,3 +143,4 @@ def gen_parameter_sweep_list(*argv, repit=1):
 if __name__ == '__main__':
     print('The file contains some functions mostly concerning data handling.')
     print('-- Spring 2018; ce2018')
+
