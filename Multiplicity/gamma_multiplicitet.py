@@ -8,38 +8,6 @@ import matplotlib.pyplot as plt
 # Also important: use approximately the same number of events per each number of guns used.
 
 
-# function for reading file of floats with spaces between them. Not the same as Pontus' function, mine might be a little
-# slower but I made a new because I thought that Pontus' function was causing problems for me, but it was probably
-# something else. Anyway, it works and I havn't bothered switching.
-def read_data(file):
-    out=[]
-    with open(file, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.rstrip()
-            tmp_string_list = line.split(' ')
-            out.append(list(map(float, tmp_string_list)))
-
-    return out
-
-def read_data_to_numpy(file,rows,cols):
-    out=np.zeros((rows,cols))
-    with open(file, 'r') as f:
-        index=0
-        for lines in f:
-            if index%100000==0:
-                print("Number of read rows: " + str(index))
-            line = lines.rstrip()
-            out[index]=np.fromstring(line,dtype=np.float32,sep=' ')
-            index=index+1
-    return out
-
-def file_len(fname):
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
-
 # This function randomly selects some rows from the matrixes batch_x and batch_y and returns the rows as two matrixes.
 # The number of rows is determined by the batch_size variable. This is exacly the same function that Pontus wrote.
 def gen_sub_set(batch_size, batch_x, batch_y):
@@ -47,56 +15,6 @@ def gen_sub_set(batch_size, batch_x, batch_y):
         raise ValueError('Lists most be of same length /Pontus')
     index_list = np.random.randint(0, len(batch_x), size=batch_size)
     return [batch_x[index].tolist() for index in index_list], [batch_y[index].tolist() for index in index_list]
-
-
-#This functions is used to get just the energy values and not the cos(theta) values from the gun matrix.
-# So it basicly removes every odd column of the gun matrix. This has no real use for the multiplicity data, but
-#I used it anyway because maybe I need it later on.
-def just_energies_in_gun(y_batch,number_particles):
-    tmp=y_batch[:,0]
-    for i in range(number_particles-1):
-        tmp=np.c_[tmp,y_batch[:,2*i+2]]
-
-    return tmp
-
-
-# Used to get the last index where the (number of guns)=(number of particles)-1.
-def get_last_index_before_highest_number_of_guns(y_batch,number_particles):
-    for i in range(y_batch.shape[0]):
-        tmp = np.trim_zeros(y_batch[i])
-        if tmp.shape[0] == number_particles:
-            return i - 1
-    return -1
-
-
-# Takes in two numpy arrays and shuffles them by their rows the same way
-def shuffle_two_numpy_arrays_the_same_way_by_rows(x_batch,y_batch):
-    if len(x_batch)!=len(y_batch):
-        return -1, -1
-    matrix_to_shuffle = np.c_[x_batch, y_batch]
-    np.random.shuffle(matrix_to_shuffle)
-    return matrix_to_shuffle[:, [i for i in range(len(x_batch[0]))]], matrix_to_shuffle[:, [i for i in range(len(x_batch[0]), len(x_batch[0]) + len(y_batch[0]))]]
-
-
-# Returns an interval of rows for a numpy matrix. In for example matlab you can just write matrix(start_row:end_row,:)
-# but I couldn't find the equivalent for that in python.
-def get_rows_numpy_array(numpy_array,index_first_row, index_last_row):
-    if index_last_row==-1:
-        index_last_row=len(numpy_array)-1
-    return numpy_array[[i for i in range(index_first_row,index_last_row+1)],:]
-
-
-# Converts the gun-matrix converted into matrix of one-hot vectors. The output has the list format, i.e. isn't numpy anymore.
-# Perhaps a bit inefficient to convert to string and then back to float, but this method works nevertheless.
-def get_one_hot_list_matrix_from_numpy_array(y_batch,number_particles):
-    y_batch_without_zeros=[len(np.trim_zeros(row)) for row in y_batch]
-    y_batch_out=[]
-    for i in y_batch_without_zeros:
-        row_str = "0 " * i + str(1) + " " + (number_particles - i) * "0 "
-        row_str = row_str.rstrip()
-        tmp_string_list = row_str.split(' ')
-        y_batch_out.append(list(map(float, tmp_string_list)))
-    return y_batch_out
 
 
 def get_y_for_specified_layers_and_nodes(x,number_of_hidden_layers,number_of_nodes_per_hidden_layer,number_particles):
@@ -116,6 +34,7 @@ def get_y_for_specified_layers_and_nodes(x,number_of_hidden_layers,number_of_nod
         y=tf.nn.relu(tf.matmul(y, weights["W"+str(i+1)]) + biases["b"+str(i+1)])
     y=tf.matmul(y,weights["W"+str(number_of_hidden_layers+1)]) + biases["b"+str(number_of_hidden_layers+1)]
     return y
+
 
 def main(npz_file,number_particles,number_of_hidden_layers,number_of_nodes_per_hidden_layer):
     print('Initializing variables')
