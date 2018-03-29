@@ -5,5 +5,8 @@ Standing in the directory of your root-file, do: ./gen_data_gunedep_<NAME OF DET
 and the required txt-files should be generated.
 The simulation has to be made with options --det=tree-gun-edep and --tree=gunlist,<NAME OF ROOT-FILE>.root
 
-Currently this only works for XB, DALI is ToDo
+Currently this only works for XB
+ToDo: 
+-implement DALI
+-include information about multiplicity and phi-angle
 //Jacob
