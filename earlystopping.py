@@ -64,14 +64,14 @@ def early_stopp_std(x_batch, y_batch, x, y_, y, step, loss, sess, save_path, upd
             out_corr_theta = []
             out_theta = []
             out = sess.run(y, feed_dict={x: x_batch_eval_sub})  # Run the network on the subset.
-            for i in range(len(out)):
-                index_list = tff.min_sqare_loss_combination(out[i], y_batch_eval_sub[i],
+            for k in range(len(out)):
+                index_list = tff.min_sqare_loss_combination(out[k], y_batch_eval_sub[k],
                                                         lam=lam)    # Find the right permutation
-                for j in range(int(len(out[0]) / 2)):               # between correct and predicted data.
-                    out_theta.append(out[i][2 * j + 1])
-                    out_corr_theta.append(y_batch_eval[i][2 * index_list[j] + 1])
+                for l in range(int(len(out[0]) / 2)):               # between correct and predicted data.
+                    out_theta.append(out[k][2 * l + 1])
+                    out_corr_theta.append(y_batch_eval[k][2 * index_list[l] + 1])
 
-            err_theta = [(out_theta[i] - out_corr_theta[i]) for i in range(len(out_theta))]  # Error in cos(theta).
+            err_theta = [(out_theta[p] - out_corr_theta[p]) for p in range(len(out_theta))]  # Error in cos(theta).
 
             err_theta = np.array(err_theta)
             mean = np.mean(err_theta)               # check where the 'x_o' is
