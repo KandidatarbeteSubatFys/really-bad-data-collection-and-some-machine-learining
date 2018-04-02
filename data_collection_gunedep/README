@@ -1,9 +1,11 @@
 These files lets you create txt-files using the gunedepXB/DALI-variables.
 If any of the particles deposits less than 90% (this value can be changed) of its energy in the detector the event
 is thrown away.
-Standing in the directory of your root-file, do: ./gen_data_gunedep_<NAME OF DETECTOR>.sh <NAME OF ROOT-FILE>.root
+Standing in the directory of your root-file, do: 
+./gen_data_gunedep_<NAME OF DETECTOR>.sh <NAME OF ROOT-FILE>.root
 and the required txt-files should be generated.
-The simulation has to be made with options --det=tree-gun-edep and --tree=gunlist,<NAME OF ROOT-FILE>.root
+The simulation has to be made with options: 
+--det=tree-gun-edep and --tree=gunlist,<NAME OF ROOT-FILE>.root
 To create data with varying nummber of guns do --gun=...,prob=w for each gun where w=[0,1] is probability for that gun
 to fire. This will cause variable gunn to vary for each event.
 
