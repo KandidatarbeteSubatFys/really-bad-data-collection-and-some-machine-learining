@@ -3,6 +3,7 @@
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+using namespace std;
 
 void h102::Loop()
 {
@@ -32,11 +33,16 @@ void h102::Loop()
    if (fChain == 0) return;
 
    FILE * dataFile;
-   dataFile = fopen("XBe_data.txt","w"); // detector output data
+   const char * inDatatxt = "XB_det_data.txt";
+   dataFile = fopen(inDatatxt,"w"); // detector output data
+
    FILE * gunTFile;
-   gunTFile = fopen("XBe_gunTVals.txt","w"); // "correct" gun energies
+   const char * correctGunDatatxt = "XB_gun_vals.txt";
+   gunTFile = fopen(correctGunDatatxt,"w"); // "correct" gun data (energies, cos(theta), etc.)
+
    FILE * depEFile;
-   depEFile = fopen("XBe_sum_of_dep_energies.txt","w");
+   const char * totDepEtxt = "XB_sum_of_dep_energies.txt";
+   depEFile = fopen(totDepEtxt,"w"); // sum of XBe for each event
 
    //Setting up crystal array
    const int noofcryst = 162;
@@ -45,9 +51,12 @@ void h102::Loop()
    int events = 0;
    
    Long64_t nentries = fChain->GetEntriesFast();
+   
+   // Find maximum number of guns firing in the simulation
+   int maxgunn = (int)fChain->GetMaximum("gunn");
 
    Long64_t nbytes = 0, nb = 0;
-   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+   for (Long64_t jentry=0; jentry < nentries; jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -55,7 +64,7 @@ void h102::Loop()
 
       // Check energy deposited vs primary energy
       bool goodEvent = true;
-      for (int i=0;i<gunn;i++){
+      for (int i = 0; i < gunn; i++){
 	goodEvent = gunedepXB[i]/gunT[i] > 0.9;
 	if (!goodEvent) break;
       }
@@ -64,11 +73,15 @@ void h102::Loop()
       if (goodEvent) {
 	events++;
 
-	for(int i=0;i<gunn;i++){
-	// Write gun energies to gun-file
-	fprintf(gunTFile,"%f ",gunT[i]);
-	// Write cos(theta) to gun-file
-	fprintf(gunTFile,"%f ",gunpz[i]/sqrt(gunpz[i]*gunpz[i]+gunpy[i]*gunpy[i]+gunpx[i]*gunpx[i])); // could use pow instead for ^2
+	for(int i=0; i<gunn; i++){
+	  // Write gun energies to gun-file
+	  fprintf(gunTFile,"%f ",gunT[i]);
+	  // Write cos(theta) to gun-file
+	  fprintf(gunTFile,"%f ",gunpz[i]/sqrt(gunpz[i]*gunpz[i]+gunpy[i]*gunpy[i]+gunpx[i]*gunpx[i])); // could use pow instead for ^2
+	}
+	// Pad with zeros if gunn < maxgunn
+	for(int i=gunn; i<maxgunn; i++){
+	  fprintf(gunTFile,"%f %f ",0.0,0.0);
 	}
 	fprintf(gunTFile,"\n");
       
@@ -92,8 +105,9 @@ void h102::Loop()
 	
       }
    }
-   // 
-   printf("Events simulated (ggland): %lld Events kept: %d Ratio: %f\n ",nentries,events,(float)events/nentries);
+   // Print info on the run
+   printf("Events simulated (ggland): %lld Events kept: %d Ratio: %f\n",nentries,events,(float)events/nentries);
+   printf("Files generated:\n%s\n%s\n%s\n",inDatatxt,correctGunDatatxt,totDepEtxt);
    
    // Close files
    fclose(gunTFile);

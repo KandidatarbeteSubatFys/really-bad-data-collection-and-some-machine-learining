@@ -23,7 +23,7 @@ void root_make_class_and_gen_data_files_XB(const char * rootFile) {
   }
   else printf("%s","Unable to open files...");
 
-  // Generate data files
+  // Generate data files 	
   gROOT->ProcessLine(".L h102.C");
   gROOT->ProcessLine("h102 t");
   gROOT->ProcessLine("t.Loop()");
