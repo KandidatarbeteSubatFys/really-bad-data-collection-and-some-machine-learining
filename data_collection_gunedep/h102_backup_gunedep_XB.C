@@ -5,6 +5,8 @@
 #include <TCanvas.h>
 using namespace std;
 
+// This code is for XB only
+
 void h102::Loop()
 {
 //   In a ROOT session, you can do:
