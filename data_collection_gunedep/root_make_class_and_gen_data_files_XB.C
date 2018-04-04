@@ -2,6 +2,8 @@
 #include <fstream>
 using namespace std;
 
+// This code is for XB only
+
 void root_make_class_and_gen_data_files_XB(const char * rootFile) {
   // Read root file and make the h102-class
   TFile *a=TFile::Open(rootFile);
