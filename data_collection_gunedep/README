@@ -11,8 +11,10 @@ to fire. This will cause variable gunn to vary for each event.
 
 The h102.C- and h102.h-files are deleted after process is finished.
 
-Currently this only works for XB
+There are now scripts for both XB and DALI :)
+
 ToDo: 
--implement DALI
 -include info on phi angle
+-include info on gun position
+-include info on boost parameters
 //Jacob
