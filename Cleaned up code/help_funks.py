@@ -6,28 +6,13 @@ import math as m
 from random import shuffle
 
 
-def read_data(file, fill_out_to=None):
-    """Reading the content from a file txt with the strukture ex.
-    0.1 0.2 0.1 -0.6 \n
-    the number of elements in a row is arbitrary but the line must end with space and \n. The output is is a list of
-    lists there the content of every row in the file is placed in the inner lists.
-    Args:   File: str filename
-            fill_out_to: int if a given line in the file dose not have this amount of element extra zeros will be added.
-    Out:    out: a list of list with the content of the file.
-    """
-    out = []
-    with open(file, 'r') as f:                                      # Opens the file
-        lines = f.readlines()                                       # Reads the file
-        if isinstance(fill_out_to, int):                            # If fill_out is given
-            diff = (fill_out_to - len(out[0])) * [0]
-            for line in lines:
-                temp = line.split(' ')
-                out.append([float(s) for s in temp[0:-1]] + diff)
-        else:                                                       # with no fill out.
-            for line in lines:                                      # Some duplication of code, in the interest of speed.
-                temp = line.split(' ')                              # Split the line att the spaces.
-                out.append([float(s) for s in temp[0:-1]])          # Cast the elements in temp to float(except the last)
-    return out                                                      # and appends it to out.
+def read_data(file, cols=162, dtype=np.float32):
+	rows = file_len(file)
+	out = np.zeros((rows, cols), dtype=dtype)
+	with open(file) as f: 
+		for i, line in enumerate(f): 
+			out[i] = np.fromstring(line.rstrip(), dtype=dtype, sep=' ')
+	return out
 
 
 def randomize_content(*args):
@@ -37,19 +22,23 @@ def randomize_content(*args):
     Out:    new_x_batch, new_y_batch: randomized versions of x_batch and y_batch.
     """
     for arg in args:
-        if not isinstance(arg, list):
+        if not (isinstance(arg, list) or isinstance(arg, np.ndarray)):
             raise TypeError('All input arguments must be of type list. /Pontus')
         elif not len(args[0]) == len(arg):
             raise TypeError('Batches most be of same size /Pontus')
 
-    index_list = [i for i in range(len(args[0]))]                        # All incises of the x_batch list shuffled.
-    shuffle(index_list)
-    out = [[] for i in range(len(args))]
-    for i in index_list:                                                # Place the content of x_batch and y_batch
-        for j in range(len(args)):
-            out[j].append(args[j][i])                                  # in the order of index_list into the output
+    index_list = np.arange(0, len(args[0]), dtype=np.int)                        # All incises of the x_batch list shuffled.
+    np.random.seed(89375)
+    np.random.shuffle(index_list)
 
-    return tuple(out)
+    return tuple(arg[index_list] for arg in args)
+
+
+def file_len(file):
+	with open(file) as f:
+		for i, l in enumerate(f):
+			pass
+	return i + 1 
 
 
 def gen_sub_set(batch_size, batch_x, batch_y):

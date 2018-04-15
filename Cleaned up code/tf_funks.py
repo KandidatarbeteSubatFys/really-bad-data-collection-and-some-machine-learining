@@ -4,6 +4,9 @@
 import tensorflow as tf
 import numpy as np
 import itertools as it
+import time as t
+import help_funks as hf
+from scipy.special import factorial
 
 
 def percent_error(x, y):
@@ -185,7 +188,98 @@ def min_sqare_loss_combination(y, y_, lam=1, off_set=0):
     return index_min                                        # Return the permutation with min loss.
 
 
-def split_energy_angle_angle_comb(y, y_, num_splits, lam=1, lam2=1, tree=True, off_set=0):
+def split_doppler_energy_comb(y, y_, num_splits, tree=True, off_set=0):
+    """Loss function used when the network predict doppler corrected energy's of an arbitrary number of particles. The
+    energy is normalized and summed with the angle quadratic. It looks at all combination so se the right match
+    between the predicted and the goal values. The energy's and angel is always acossieated so just the combination
+    of the energy angle block.
+    Args:   y: tensor predicted doppler corrected energy.
+            y_: tensor correct predicted values alternating energy, angle and beta data.
+            num_split: int the number of 'blocks', the number of particles.
+            tree: boolean if true, the minimum operator will be used in a tree structure
+                          if false, the minimum operator will just be taken iterative.
+    Out:    loss: tensor a network for calculating the loss.
+    """
+    splited_y = tf.split(y, num_splits, axis=1)                                         # Split y in particle blocks
+    splited_y_ = tf.split(y_, num_splits, axis=1)                                       # Split y_ in particle blocks
+    temp_shape = tf.shape(tf.split(splited_y[0], 2, axis=1))                            # Shape of batch                    ToDo: look att this, should maybe be [0] after split.
+
+    def one_comb_loss(splited_y, splited_y_, index_list):                               # Nested funk to calc loss for a
+        temp = tf.zeros(temp_shape, dtype=tf.float32)                                   # given permutation, index_list.
+        for i in range(len(index_list)):                                                # loop over particle's.
+            DE = splited_y[i]                                 # Split energy and angel
+            E_, cos_ , beta_= tf.split(splited_y_[index_list[i]], 3, axis=1)                     # -II-
+            temp = temp + tf.square(tf.divide(1-beta_*cos_, tf.sqrt(1 - tf.square(beta_)))*E_ - DE)   # Add loss iterative
+        return temp                                                                              # Return the loss
+
+    def minimize_step(tensor_list):                 # Nested funk, one step in the tree structure.
+        if len(tensor_list) % 2 == 0:               # Even number of losses, find minimum of between pairs.
+            return [tf.minimum(tensor_list[i], tensor_list[i+1]) for i in range(0, len(tensor_list), 2)]
+        else:                                       # Odd number of losses, find min between pairs, last unpaired.
+            new_list_of_tensors = [tf.minimum(tensor_list[i], tensor_list[i+1]) for i in range(0, len(tensor_list)-1, 2)]
+            new_list_of_tensors.append(tensor_list[-1])     # Append the unpaired loss.
+            return new_list_of_tensors
+
+    # All losses in a list. Inner loop over all permutations.
+    list_of_tensors = [one_comb_loss(splited_y, splited_y_, index_list) for index_list in it.permutations(range(num_splits), num_splits)]
+
+    if tree == False:
+        loss = tf.divide(tf.constant(1, dtype=tf.float32), tf.zeros(temp_shape, dtype=tf.float32))  # Init inf loss
+        for i in range(len(list_of_tensors)):
+            loss = tf.minimum(loss, list_of_tensors[i])                     # Successive min, with previous best.
+    else:                                                                   # Tree structure.
+        while len(list_of_tensors) > 1:                                     # while nr loss > 1.
+            list_of_tensors = minimize_step(list_of_tensors)                # Successive min, returns a smaller list.
+        loss = list_of_tensors[0]                                           # Bind best to loss name.
+
+    return tf.reduce_mean(loss)                                             # Returns the men over the batch.
+
+
+def min_sqare_loss_combination_doppler(y, y_, off_set=0):
+    """Equivalent split_doppler_energy_comb but act on list insted of tensors. A single evens should just be given. Is
+    used to match predicted and correct data for data analysis.
+    Args:   y: list predicted.
+            y_: list correct.
+            lam: float weight between angle and energy.
+    Out: index_min: list of the index comb that had min loss, the right matching.
+    Note: A single event should be given, not a batch!
+    """
+    if not 3*len(y) == len(y_):
+        raise ValueError('y_ most be tree times as long as y')
+
+    index_min = False
+    temp_min = np.inf                                                           # Init min loss to inf.
+    for index_list in it.permutations(range(int(len(y)/2)), int(len(y)/2)):     # Looping over all permutations.
+        temp = 0
+        for i in range(int(len(y_)/3)):                                          # Successively adding up the loss.
+            temp = temp + np.square((1 - y_[3*i+2]*y_[3*i+1])/np.sqrt(1 - np.square(y_[3*i+2]))*y_[3*i] - y[i])
+
+        if temp < temp_min:                                 # If loss is less the min, save loss and the permutation.
+            temp_min = temp
+            index_min = index_list
+
+    if index_min == False:
+        raise ValueError('Something is horribly wrong /Pontus ')
+
+    return index_min                                        # Return the permutation with min loss.
+
+
+def normalisation_every(y, corr_on_every):
+    length = tf.size(y[0])
+    split = tf.split(y, length, axis=1)
+    split_new = []
+    for i in range(len(split)):
+        if i + i % corr_on_every:
+            split_new.append(tf.sigmoid(y[i]))
+        else:
+            split_new.append(y[i])
+    return tf.concat(split_new, 1)
+
+
+
+
+
+def split_energy_angle_angle_comb(y, y_, num_splits, lam=1, lam2=1, method='tree', off_set=0):
     """Loss function used when the network predict energy's, cos(theta) and phi of an arbitrary number of particles. The
     energy is normalized and summed with the angles quadratic. It looks at all combination so se the right match
     between the predicted and the goal values. The energy's and angel is always acossieated so just the combination
@@ -218,17 +312,42 @@ def split_energy_angle_angle_comb(y, y_, num_splits, lam=1, lam2=1, tree=True, o
             new_list_of_tensors.append(tensor_list[-1])     # Append the unpaired loss.
             return new_list_of_tensors
 
+    def min_step(concat_tensor, even):
+        if even:
+            t1, t2 = tf.split(concat_tensor, 2, axis=1)
+            return tf.minimum(t1, t2)
+        else:
+            t1, t2 = tf.split(concat_tensor[:, :-1], 2, axis=1)
+            min = tf.minimum(t1, t2)
+            return tf.concat([min, concat_tensor[:, -1:]], axis=1)
+
     # All losses in a list. Inner loop over all permutations.
     list_of_tensors = [one_comb_loss(index_list) for index_list in it.permutations(range(num_splits), num_splits)]
 
-    if tree == False:
+    if method == 'successive':
         loss = tf.divide(tf.constant(1, dtype=tf.float32), tf.zeros(temp_shape, dtype=tf.float32))  # Init inf loss
         for i in range(len(list_of_tensors)):
             loss = tf.minimum(loss, list_of_tensors[i])                     # Successive min, with previous best.
-    else:                                                                   # Tree structure.
+    elif method == 'tree':                                                                   # Tree structure.
         while len(list_of_tensors) > 1:                                     # while nr loss > 1.
             list_of_tensors = minimize_step(list_of_tensors)                # Successive min, returns a smaller list.
         loss = list_of_tensors[0]                                           # Bind best to loss name.
+    elif method == 'block':
+        n = factorial(num_splits)
+        even_odd_list = []
+        while n > 1:
+            if n % 2 == 0:
+                even_odd_list.append(True)
+                n = n / 2
+            else:
+                even_odd_list.append(False)
+                n = (n - 1) / 2 + 1
+        loss = tf.concat(list_of_tensors, axis=1)
+
+        for even in even_odd_list:
+            loss = min_step(loss, even)
+    else:
+        raise ValueError('No (correct) method for taking the minimum.')
 
     return tf.reduce_mean(loss)                                             # Returns the mean over the batch.
 
@@ -302,6 +421,79 @@ def get_nr_parameters():
     Out:    unnamed: float number of trainable variables.
     """
     return np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])
+
+
+def train_nr_iterations(x, y_, train_step, sess, x_batch, y_batch, nr_steps, batch_size=100):
+    for _ in range(nr_steps):
+        x_batch_sub, y_batch_sub = hf.gen_sub_set(batch_size, x_batch, y_batch)
+        sess.run(train_step, feed_dict={x: x_batch_sub, y_: y_batch_sub})
+
+# ToDo: Finish this one
+def train_stop_on_fitted_parameters_energy_theta(x, y_, train_step, y, loss, sess, x_batch, y_batch, x_batch_eval, y_batch_eval,
+                                                 saver=None, save=False, save_path=None, ckpt_intrevall=3600, restore=False, restore_path=None,
+                                                 lower_iteration_limit=0, upper_iteration_limit=1e6, nr_train_step=100,
+                                                 print_every_nr_rain_step=10, train_batch_size=100, eval_batch_size=1000):
+    if save or restore:
+        if saver == None:
+            raise TypeError('A tf.Saver must be given if you want to save or restore a network')
+        if save:
+            if save_path == None:
+                print('Warning. No path for storing the network is given. '
+                      'The network will be stored in the current folder.')
+                save_path = './model.ckpt'
+        if restore:
+            if restore_path == None:
+                raise ValueError('A path to the network to be restored must be given.')
+
+    if restore:
+        saver.restore(sess, restore_path)
+    else:
+        sess.run(tf.global_variables_initializer())
+
+    if save:
+        saver.Save(sess, save_path)
+
+
+    loss_list = []
+    loss_list_train = []
+
+    p1, p2, p3, p4, move_av_p1, move_av_p2, move_av_p3, move_av_p4 = [], [], [], [], [], [], [], []
+
+    i = 0
+    j = 0
+    cond_1, cond_2, cond_3, cond_4 = True, True, True, True
+
+    print('Start training')
+    start = t.time()
+    time_last_save = start
+
+    while i < lower_iteration_limit or ((cond_1 or cond_2 or cond_3 or cond_4) and i < upper_iteration_limit):
+        x_batch_sub, y_batch_sub = hf.gen_sub_set(train_batch_size, x_batch, y_batch)
+        loss_list_train.append(sess.run(loss, feed_dict={x: x_batch_sub, y_: y_batch_sub}))
+        x_batch_sub, y_batch_sub = hf.gen_sub_set(eval_batch_size, x_batch_eval, y_batch_eval)
+        loss_val = sess.run(loss, feed_dict={x: x_batch_sub, y_: y_batch_sub})
+        loss_list.append(loss_val)
+
+        if i % print_every_nr_rain_step*nr_train_step == 0:
+            print('Iteration number: {} Loss function value: {}'.format(i, loss_val))
+        if t.time() - time_last_save > ckpt_intrevall:
+            print('Storing the model of the network in {}'.format(save_path))
+
+        # Gör anpassning osv
+
+        for _ in range(nr_train_step):
+            x_batch_sub, y_batch_sub = hf.gen_sub_set(train_batch_size, x_batch, y_batch)
+            sess.run(train_step, feed_dict={x: x_batch_sub, y_: y_batch_sub})
+        i = i + nr_train_step
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
